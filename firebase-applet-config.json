@@ -1,12 +1,12 @@
 {
-  "projectId": "neural-block-ldckx",
-  "appId": "1:377693697888:web:75e77e50e43a9e3c139005",
-  "apiKey": "AIzaSyDK-9aLC0leagz2XHubkhQW3DINcKymo90",
-  "authDomain": "neural-block-ldckx.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-planejamentopeda-4f0781d6-d618-4d18-ab74-c97151bfa89b",
-  "storageBucket": "neural-block-ldckx.firebasestorage.app",
-  "messagingSenderId": "377693697888",
+  "projectId": "planejamento-pedagogico-f530d",
+  "appId": "1:154203738143:web:138ca6ccbb7ceb690a052a",
+  "apiKey": "AIzaSyC_ioF-kwV2tExkruxJs84c-GKhyPbli4M",
+  "authDomain": "planejamento-pedagogico-f530d.firebaseapp.com",
+  "firestoreDatabaseId": "",
+  "storageBucket": "planejamento-pedagogico-f530d.firebasestorage.app",
+  "messagingSenderId": "154203738143",
   "measurementId": "",
-  "oAuthClientId": "377693697888-ml505d3t8q3bj2ca7u1cr4cvsmti4gsk.apps.googleusercontent.com",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }
