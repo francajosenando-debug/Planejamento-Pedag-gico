@@ -30,6 +30,7 @@ import {
   SavedLesson 
 } from '../types';
 import { RichTextEditor } from './RichTextEditor';
+import { ImageUploader } from './ImageUploader';
 import { BnccSelectorModal } from './BnccSelectorModal';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
@@ -566,6 +567,18 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                       rows={2}
                       className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 outline-none"
                     />
+
+                    {/* Image Upload for Routine */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                      <ImageUploader
+                        images={item.images || []}
+                        onImagesChange={(imgs) => handleUpdateRoutine(item.id, 'images', imgs)}
+                        multiple={true}
+                        label="Fotos / Imagens da Rotina"
+                        hint="Anexe fotos de murais, fichas ou ilustrações da acolhida"
+                        maxFiles={4}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -754,6 +767,18 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                         />
                       </div>
+                    </div>
+
+                    {/* Image Upload for Lesson */}
+                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                      <ImageUploader
+                        images={lesson.images || []}
+                        onImagesChange={(imgs) => handleUpdateLesson(lesson.id, 'images', imgs)}
+                        multiple={true}
+                        label="Fotos & Anexos Ilustrativos da Aula"
+                        hint="Adicione fotos de modelos de atividades, moldes, fotos dos alunos ou esquemas pedagógicos"
+                        maxFiles={6}
+                      />
                     </div>
                   </div>
                 ))}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, BookMarked, Plus, Star, Trash2, Edit2, X, Image as ImageIcon } from 'lucide-react';
 import { Story } from '../types';
+import { ImageUploader } from './ImageUploader';
 
 interface StoryBankProps {
   stories: Story[];
@@ -133,7 +134,13 @@ export const StoryBank: React.FC<StoryBankProps> = ({ stories, onSaveStory, onDe
               <input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Título do livro" className="w-full p-2.5 border rounded-xl" />
               <input type="text" value={author} onChange={e => setAuthor(e.target.value)} placeholder="Autor(a)" className="w-full p-2.5 border rounded-xl" />
               <input type="text" value={ageRange} onChange={e => setAgeRange(e.target.value)} placeholder="Faixa etária ex: 3 a 5 anos" className="w-full p-2.5 border rounded-xl" />
-              <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="URL da Capa da história" className="w-full p-2.5 border rounded-xl" />
+              <ImageUploader
+                imageUrl={imageUrl}
+                onImageUrlChange={setImageUrl}
+                multiple={false}
+                label="Capa da História / Livro"
+                hint="Envie uma foto da capa do livro ou ilustração"
+              />
               <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Sinopse / Descrição" rows={3} className="w-full p-2.5 border rounded-xl" />
               <textarea value={objectives} onChange={e => setObjectives(e.target.value)} placeholder="Objetivos pedagógicos" rows={2} className="w-full p-2.5 border rounded-xl" />
 

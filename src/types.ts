@@ -34,6 +34,7 @@ export interface RoutineItem {
   title: string; // e.g., "ROTINA / ACOLHIDA"
   description: string; // e.g., "- Higienização: Banheiro e encher as garrafas\n- Rotina: Chamada, calendário, tempo, quantos somos\n- Devocional."
   order: number;
+  images?: string[]; // Attached images/photos of activity
 }
 
 export interface Lesson {
@@ -48,6 +49,7 @@ export interface Lesson {
   notes?: string; // Observações adicionais
   estimatedTime?: string; // e.g., "50 minutos"
   attachments?: string[]; // Links or URLs
+  images?: string[]; // Attached images/photos of activity or materials
 }
 
 export interface DayPlanning {
@@ -95,6 +97,7 @@ export interface SavedLesson {
   materials: string[];
   games?: string;
   notes?: string;
+  images?: string[];
   isFavorite?: boolean;
   createdAt: string;
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Settings, School, User, MapPin, Phone, Image, Save } from 'lucide-react';
 import { SchoolSettings } from '../types';
+import { ImageUploader } from './ImageUploader';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -102,20 +103,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              URL da Logo da Escola
-            </label>
-            <div className="relative">
-              <Image className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input
-                id="settings-logo-url"
-                type="text"
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://exemplo.com/logo.png"
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
+            <ImageUploader
+              imageUrl={logoUrl}
+              onImageUrlChange={setLogoUrl}
+              multiple={false}
+              label="Logo da Escola / Instituição"
+              hint="Faça upload da imagem da logo para o cabeçalho dos impressos"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
