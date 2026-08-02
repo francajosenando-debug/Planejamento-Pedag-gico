@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "1.0",
+  "entities": {
+    "users": {
+      "title": "User Profiles",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "phone": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "settings": {
+      "title": "School Settings",
+      "description": "Teacher school configuration",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "logoUrl": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "phone": { "type": "string" },
+        "defaultClass": { "type": "string" }
+      },
+      "required": ["userId"]
+    },
+    "plannings": {
+      "title": "Weekly Plannings",
+      "description": "Weekly pedagogical plannings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "className": { "type": "string" },
+        "year": { "type": "string" },
+        "teacher": { "type": "string" },
+        "period": { "type": "string" },
+        "week": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "generalTheme": { "type": "string" },
+        "project": { "type": "string" },
+        "bookWorked": { "type": "string" },
+        "generalNotes": { "type": "string" },
+        "days": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "className", "week"]
+    },
+    "lessons": {
+      "title": "Lesson Bank",
+      "description": "Saved reusable lessons",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "subject": { "type": "string" },
+        "theme": { "type": "string" },
+        "objectives": { "type": "string" },
+        "bnccCodes": { "type": "array", "items": { "type": "string" } },
+        "development": { "type": "string" },
+        "materials": { "type": "array", "items": { "type": "string" } },
+        "games": { "type": "string" },
+        "notes": { "type": "string" },
+        "isFavorite": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "name"]
+    },
+    "stories": {
+      "title": "Story Bank",
+      "description": "Saved stories",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "objectives": { "type": "string" },
+        "ageRange": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "isFavorite": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "title"]
+    },
+    "songs": {
+      "title": "Song Bank",
+      "description": "Saved songs",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "author": { "type": "string" },
+        "youtubeUrl": { "type": "string" },
+        "objective": { "type": "string" },
+        "notes": { "type": "string" },
+        "isFavorite": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "name"]
+    },
+    "games": {
+      "title": "Game Bank",
+      "description": "Saved games and activities",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "materials": { "type": "string" },
+        "description": { "type": "string" },
+        "objectives": { "type": "string" },
+        "ageRange": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "isFavorite": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "name"]
+    },
+    "materials": {
+      "title": "Material Catalog",
+      "description": "Frequently used materials",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" }
+      },
+      "required": ["name"]
+    }
+  },
+  "security": {
+    "users": "request.auth != null && request.auth.uid == resource.data.uid",
+    "settings": "request.auth != null && request.auth.uid == resource.data.userId",
+    "plannings": "request.auth != null && request.auth.uid == resource.data.userId",
+    "lessons": "request.auth != null && request.auth.uid == resource.data.userId",
+    "stories": "request.auth != null && request.auth.uid == resource.data.userId",
+    "songs": "request.auth != null && request.auth.uid == resource.data.userId",
+    "games": "request.auth != null && request.auth.uid == resource.data.userId",
+    "materials": "request.auth != null"
+  }
+}
