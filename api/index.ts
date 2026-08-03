@@ -80,6 +80,47 @@ Tema sugerido: ${theme || "Lúdico"}`;
   }
 });
 
+// 1b. AI Routine Block Generator Route
+app.post("/api/ai/generate-routine-item", async (req, res) => {
+  try {
+    const { title, time, prompt, ageGroup } = req.body;
+
+    const ai = getGenAI();
+
+    const systemInstruction = `Você é um especialista em rotinas pedagógicas da Educação Infantil no Brasil.
+Sua tarefa é gerar uma descrição organizada, lúdica e prática em tópicos para um momento da rotina escolar.
+Retorne EXCLUSIVAMENTE um JSON válido no seguinte formato:
+{
+  "description": "- Tópico 1\\n- Tópico 2\\n- Tópico 3"
+}`;
+
+    const userPrompt = `Momento da Rotina: "${title || "Acolhida / Momento da Rotina"}"
+Horário do Bloco: ${time || "Horário da rotina"}
+Orientação/Detalhes do professor: "${prompt || title || "Atividade de rotina da educação infantil"}"
+Faixa Etária: ${ageGroup || "Crianças pequenas (4 a 5 anos - EI03)"}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.6-flash",
+      contents: userPrompt,
+      config: {
+        systemInstruction,
+        responseMimeType: "application/json",
+        temperature: 0.7,
+      },
+    });
+
+    const text = response.text || "{}";
+    const parsedData = JSON.parse(text);
+
+    res.json({ success: true, description: parsedData.description || "" });
+  } catch (err: any) {
+    console.error("Erro ao gerar item da rotina com IA:", err);
+    res.status(500).json({
+      error: err?.message || "Falha ao gerar descrição da rotina com IA.",
+    });
+  }
+});
+
 // 2. AI Full Weekly Planning Generator Route (5 Days: Segunda a Sexta)
 app.post("/api/ai/generate-planning", async (req, res) => {
   try {
