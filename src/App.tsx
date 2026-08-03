@@ -16,6 +16,7 @@ import {
 import { 
   WeeklyPlanning, 
   SavedLesson, 
+  Lesson,
   Story, 
   Song, 
   Game, 
@@ -414,6 +415,48 @@ export default function App() {
         isOpen={aiAssistantOpen}
         onClose={() => setAiAssistantOpen(false)}
         onSaveToBank={(lesson) => setLessons([lesson, ...lessons])}
+        defaultClass={settings?.defaultClass || 'KINDER 3'}
+        defaultTeacher={settings?.teacherName || 'Profe Camila'}
+        onApplyPlanning={(newPlanning) => {
+          setPlannings([newPlanning, ...plannings]);
+          setCurrentPlanning(newPlanning);
+          setActiveTab('novo-planejamento');
+          setAiAssistantOpen(false);
+        }}
+        onApplyLesson={(lessonData) => {
+          const newLesson: Lesson = {
+            id: `lesson-${Date.now()}`,
+            subject: lessonData.subject || 'LINGUAGEM',
+            time: '13:30 – 14:20',
+            theme: lessonData.theme || lessonData.name || 'Aula Gerada por IA',
+            objectives: lessonData.objectives || '',
+            bnccCodes: lessonData.bnccCodes || [],
+            development: lessonData.development || '',
+            materials: lessonData.materials || [],
+            notes: lessonData.notes || ''
+          };
+
+          if (currentPlanning) {
+            const dayKey = 'segunda';
+            const currentDayObj = currentPlanning.days[dayKey];
+            const updatedDay = {
+              ...currentDayObj,
+              lessons: [...(currentDayObj.lessons || []), newLesson]
+            };
+            const updatedPlanning = {
+              ...currentPlanning,
+              days: {
+                ...currentPlanning.days,
+                [dayKey]: updatedDay
+              },
+              updatedAt: new Date().toISOString()
+            };
+            setCurrentPlanning(updatedPlanning);
+            setPlannings(plannings.map(p => p.id === updatedPlanning.id ? updatedPlanning : p));
+          }
+          setActiveTab('novo-planejamento');
+          setAiAssistantOpen(false);
+        }}
       />
     </div>
   );

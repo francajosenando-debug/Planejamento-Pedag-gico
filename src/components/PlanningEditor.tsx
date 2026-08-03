@@ -792,6 +792,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
 
               <div className="flex items-center gap-2">
                 <button
+                  id="add-lesson-ai-btn"
+                  onClick={onOpenAiAssistant}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold text-xs flex items-center gap-1 shadow-sm transition-all"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                  <span>Gerar com IA</span>
+                </button>
+
+                <button
                   id="add-lesson-btn"
                   onClick={handleAddLesson}
                   className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1 shadow-sm transition-colors"
