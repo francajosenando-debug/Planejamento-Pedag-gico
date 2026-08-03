@@ -1,7 +1,49 @@
 import jsPDF from 'jspdf';
 import { WeeklyPlanning, SchoolSettings } from '../types';
 
-export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolSettings) {
+interface ImageDetails {
+  dataUrl: string;
+  width: number;
+  height: number;
+  format: 'JPEG' | 'PNG';
+}
+
+async function loadImageDetails(src: string): Promise<ImageDetails | null> {
+  if (!src) return null;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const isPng = src.startsWith('data:image/png');
+          const format: 'JPEG' | 'PNG' = isPng ? 'PNG' : 'JPEG';
+          const dataUrl = canvas.toDataURL(isPng ? 'image/png' : 'image/jpeg', 0.85);
+          resolve({
+            dataUrl,
+            width: img.width,
+            height: img.height,
+            format,
+          });
+        } else {
+          resolve(null);
+        }
+      } catch (err) {
+        console.warn('Erro ao processar imagem para PDF:', err);
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+export async function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolSettings) {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -18,32 +60,54 @@ export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolS
   const teacherName = planning.teacher || settings?.teacherName || 'Professor(a)';
   const cityState = (settings?.city && settings?.state) ? `${settings.city} - ${settings.state}` : '';
 
+  // Pre-load logo if present
+  const logoDetails = settings?.logoUrl ? await loadImageDetails(settings.logoUrl) : null;
+
   const addHeader = () => {
     // Top border box / Header styling
     doc.setDrawColor(200, 210, 225);
     doc.setFillColor(248, 250, 252);
     doc.rect(margin, margin, contentWidth, 24, 'FD');
 
+    let textXOffset = margin + 5;
+
+    // Draw school logo if available
+    if (logoDetails) {
+      const maxLogoDim = 18; // 18mm max
+      const scale = Math.min(maxLogoDim / logoDetails.width, maxLogoDim / logoDetails.height, 1);
+      const logoW = logoDetails.width * scale;
+      const logoH = logoDetails.height * scale;
+      const logoX = margin + 3;
+      const logoY = margin + (24 - logoH) / 2;
+
+      try {
+        doc.addImage(logoDetails.dataUrl, logoDetails.format, logoX, logoY, logoW, logoH);
+        textXOffset = logoX + logoW + 4;
+      } catch (e) {
+        console.warn('Erro ao renderizar logo no PDF:', e);
+      }
+    }
+
     // Header Text
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     doc.setTextColor(30, 58, 138); // Dark Navy Blue
-    doc.text(schoolName.toUpperCase(), margin + 5, margin + 7);
+    doc.text(schoolName.toUpperCase(), textXOffset, margin + 7);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
     doc.setTextColor(15, 23, 42);
-    doc.text(`${planning.className} – ${planning.year}`, margin + 5, margin + 14);
+    doc.text(`${planning.className} – ${planning.year}`, textXOffset, margin + 13);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setTextColor(71, 85, 105);
-    doc.text(`Planejamento: ${planning.week} (${planning.startDate || ''} a ${planning.endDate || ''})`, margin + 5, margin + 20);
+    doc.text(`Planejamento: ${planning.week} (${planning.startDate || ''} a ${planning.endDate || ''})`, textXOffset, margin + 19);
 
     if (cityState) {
       doc.text(cityState, pageWidth - margin - 5, margin + 7, { align: 'right' });
     }
-    doc.text(`Profe: ${teacherName}`, pageWidth - margin - 5, margin + 14, { align: 'right' });
+    doc.text(`Profe: ${teacherName}`, pageWidth - margin - 5, margin + 13, { align: 'right' });
 
     y = margin + 30;
   };
@@ -91,8 +155,8 @@ export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolS
     planning.days.sexta
   ];
 
-  daysList.forEach((day) => {
-    if (!day) return;
+  for (const day of daysList) {
+    if (!day) continue;
 
     addPageIfNeeded(18);
 
@@ -109,7 +173,7 @@ export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolS
 
     // Routine Items
     if (day.routine && day.routine.length > 0) {
-      day.routine.forEach((r) => {
+      for (const r of day.routine) {
         const descLines = r.description ? doc.splitTextToSize(r.description, contentWidth - 8) : [];
         const itemHeight = 6 + (descLines.length * 4.5);
         addPageIfNeeded(itemHeight);
@@ -129,13 +193,36 @@ export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolS
             y += 4.5;
           });
         }
+
+        // Routine Images
+        if (r.images && r.images.length > 0) {
+          for (const imgSrc of r.images) {
+            const imgDetails = await loadImageDetails(imgSrc);
+            if (imgDetails) {
+              const maxW = 100; // 100mm
+              const maxH = 65;  // 65mm
+              const scale = Math.min(maxW / imgDetails.width, maxH / imgDetails.height, 1);
+              const finalW = imgDetails.width * scale;
+              const finalH = imgDetails.height * scale;
+
+              addPageIfNeeded(finalH + 6);
+              try {
+                doc.addImage(imgDetails.dataUrl, imgDetails.format, margin + 8, y, finalW, finalH);
+                y += finalH + 4;
+              } catch (e) {
+                console.warn('Erro ao inserir imagem da rotina no PDF:', e);
+              }
+            }
+          }
+        }
+
         y += 2;
-      });
+      }
     }
 
     // Lesson Items
     if (day.lessons && day.lessons.length > 0) {
-      day.lessons.forEach((l) => {
+      for (const l of day.lessons) {
         addPageIfNeeded(25);
 
         // Lesson Title Bar
@@ -220,12 +307,34 @@ export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolS
           y += 5;
         }
 
+        // Lesson Images
+        if (l.images && l.images.length > 0) {
+          for (const imgSrc of l.images) {
+            const imgDetails = await loadImageDetails(imgSrc);
+            if (imgDetails) {
+              const maxW = 120; // 120mm
+              const maxH = 75;  // 75mm
+              const scale = Math.min(maxW / imgDetails.width, maxH / imgDetails.height, 1);
+              const finalW = imgDetails.width * scale;
+              const finalH = imgDetails.height * scale;
+
+              addPageIfNeeded(finalH + 6);
+              try {
+                doc.addImage(imgDetails.dataUrl, imgDetails.format, margin + 8, y, finalW, finalH);
+                y += finalH + 4;
+              } catch (e) {
+                console.warn('Erro ao inserir imagem da aula no PDF:', e);
+              }
+            }
+          }
+        }
+
         y += 4;
-      });
+      }
     }
 
     y += 6;
-  });
+  }
 
   // Footer Page Numbering
   const totalPages = doc.getNumberOfPages();
@@ -245,3 +354,4 @@ export function generatePlanningPDF(planning: WeeklyPlanning, settings?: SchoolS
   const fileName = `Planejamento_${planning.className}_${planning.week}.pdf`.replace(/\s+/g, '_');
   doc.save(fileName);
 }
+

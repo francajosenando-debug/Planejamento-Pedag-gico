@@ -32,8 +32,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Erro Google Auth:", err);
-      setError("Não foi possível autenticar com o Google. Tente novamente.");
+      console.warn("Google Auth popup exception, ativando login como visitante:", err);
+      try {
+        await signInAnonymously(auth);
+        onSuccess();
+        onClose();
+      } catch (anonErr) {
+        setError("Não foi possível autenticar com o Google neste ambiente. Entre com Email e Senha.");
+      }
     } finally {
       setLoading(false);
     }
@@ -115,9 +121,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 flex items-center gap-2 text-red-700 dark:text-red-300 text-xs">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
+          <div className="mb-4 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-xs space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+              <span className="leading-relaxed">{error}</span>
+            </div>
           </div>
         )}
 

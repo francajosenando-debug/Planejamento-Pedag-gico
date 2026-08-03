@@ -10,11 +10,13 @@ import {
   FileText, 
   Filter, 
   Clock,
-  Layers
+  Layers,
+  Eye
 } from 'lucide-react';
 import { WeeklyPlanning, SchoolSettings } from '../types';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
+import { PlanningPreviewModal } from './PlanningPreviewModal';
 
 interface PlanningListProps {
   plannings: WeeklyPlanning[];
@@ -36,6 +38,8 @@ export const PlanningList: React.FC<PlanningListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [yearFilter, setYearFilter] = useState('ALL');
   const [classFilter, setClassFilter] = useState('ALL');
+  const [previewPlanning, setPreviewPlanning] = useState<WeeklyPlanning | null>(null);
+  const [planningToDelete, setPlanningToDelete] = useState<WeeklyPlanning | null>(null);
 
   const yearsOptions = useMemo(() => {
     const years = Array.from(new Set(plannings.map(p => p.year).filter(Boolean)));
@@ -159,7 +163,7 @@ export const PlanningList: React.FC<PlanningListProps> = ({
                   <span className="text-xs text-slate-400 font-medium">{p.year}</span>
                 </div>
 
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
                   {p.week}
                 </h3>
 
@@ -205,25 +209,94 @@ export const PlanningList: React.FC<PlanningListProps> = ({
 
                   <button
                     id={`list-delete-btn-${p.id}`}
-                    onClick={() => onDeletePlanning(p.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-100 text-slate-400 hover:text-red-600 transition-colors"
-                    title="Excluir"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPlanningToDelete(p);
+                    }}
+                    className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors"
+                    title="Excluir Planejamento"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <button
-                  id={`list-edit-btn-${p.id}`}
-                  onClick={() => onSelectPlanning(p)}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1 transition-colors"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                  <span>Editar</span>
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    id={`list-view-btn-${p.id}`}
+                    onClick={() => setPreviewPlanning(p)}
+                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1 transition-colors shadow-sm"
+                    title="Visualizar Planejamento"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Visualizar</span>
+                  </button>
+
+                  <button
+                    id={`list-edit-btn-${p.id}`}
+                    onClick={() => onSelectPlanning(p)}
+                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1 transition-colors shadow-sm"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Editar</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Single Preview Modal */}
+      {previewPlanning && (
+        <PlanningPreviewModal
+          isOpen={!!previewPlanning}
+          onClose={() => setPreviewPlanning(null)}
+          planning={previewPlanning}
+          settings={settings}
+          onExportPdf={() => generatePlanningPDF(previewPlanning, settings || undefined)}
+          onExportDocx={() => generatePlanningDOCX(previewPlanning, settings || undefined)}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {planningToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Excluir Planejamento</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Ação irreversível</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Tem certeza de que deseja excluir o planejamento da turma <strong>"{planningToDelete.className}" ({planningToDelete.week})</strong>?
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                id="delete-modal-cancel-btn"
+                onClick={() => setPlanningToDelete(null)}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                id="delete-modal-confirm-btn"
+                onClick={() => {
+                  onDeletePlanning(planningToDelete.id);
+                  setPlanningToDelete(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20 transition-all flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Sim, Excluir</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -22,14 +22,8 @@ import {
   SchoolSettings, 
   UserProfile 
 } from './types';
-import { 
-  SAMPLE_PLANNING, 
-  SAMPLE_LESSONS, 
-  SAMPLE_STORIES, 
-  SAMPLE_SONGS, 
-  SAMPLE_GAMES 
-} from './data/sampleData';
-import { Navbar } from './components/Navbar';
+import { SAMPLE_PLANNING, SAMPLE_LESSONS, SAMPLE_STORIES, SAMPLE_SONGS, SAMPLE_GAMES } from './data/sampleData';
+import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { PlanningEditor } from './components/PlanningEditor';
 import { PlanningList } from './components/PlanningList';
@@ -42,11 +36,15 @@ import { MaterialsBank } from './components/MaterialsBank';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { LoginGate } from './components/LoginGate';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [darkMode, setDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved === 'dark';
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
@@ -81,8 +79,10 @@ export default function App() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
 
@@ -137,6 +137,7 @@ export default function App() {
       } else {
         setUser(null);
       }
+      setAuthLoading(false);
     });
     return () => unsubscribe();
   }, []);
@@ -189,13 +190,22 @@ export default function App() {
 
   // Delete Planning
   const handleDeletePlanning = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir este planejamento?")) return;
-    setPlannings(plannings.filter(p => p.id !== id));
+    const updated = plannings.filter(p => p.id !== id);
+    setPlannings(updated);
+
+    if (currentPlanning?.id === id) {
+      if (updated.length > 0) {
+        setCurrentPlanning(updated[0]);
+      } else {
+        handleCreateNewPlanning();
+      }
+    }
+
     if (user && db) {
       try {
         await deleteDoc(doc(db, 'plannings', id));
       } catch (e) {
-        console.error(e);
+        console.error("Erro ao deletar do Firestore:", e);
       }
     }
   };
@@ -228,11 +238,46 @@ export default function App() {
     setActiveTab('novo-planejamento');
   };
 
+  // Loading Screen
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 animate-pulse mb-4">
+          <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+        </div>
+        <p className="text-xs font-bold text-slate-600 dark:text-slate-400 animate-pulse">
+          Carregando sistema de planejamentos...
+        </p>
+      </div>
+    );
+  }
+
+  // Mandatory Login Gate if user is not authenticated
+  if (!user) {
+    return (
+      <LoginGate 
+        darkMode={darkMode} 
+        setDarkMode={setDarkMode} 
+        onLocalGuestLogin={() => {
+          setUser({
+            uid: 'guest-' + Date.now(),
+            email: 'visitante@escola.com',
+            displayName: 'Professor(a) Visitante',
+            isAnonymous: true
+          });
+        }}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors flex flex-col selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors selection:bg-blue-500 selection:text-white">
       
-      {/* Top Navbar */}
-      <Navbar
+      {/* Sidebar Navigation */}
+      <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         user={user}
@@ -248,7 +293,7 @@ export default function App() {
       />
 
       {/* Main App Canvas */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <main className="lg:pl-64 w-full min-h-screen px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto">
         
         {activeTab === 'dashboard' && (
           <Dashboard
@@ -278,6 +323,8 @@ export default function App() {
             settings={settings}
             onOpenAiAssistant={() => setAiAssistantOpen(true)}
             savedLessons={lessons}
+            stories={stories}
+            onClose={() => setActiveTab('planejamentos')}
           />
         )}
 

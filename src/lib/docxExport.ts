@@ -8,16 +8,78 @@ import {
   TableRow,
   TableCell,
   WidthType,
-  BorderStyle,
-  AlignmentType
+  AlignmentType,
+  ImageRun
 } from 'docx';
 import { WeeklyPlanning, SchoolSettings } from '../types';
+
+async function getImageArrayBufferAndSize(src: string): Promise<{ buffer: ArrayBuffer; width: number; height: number; type: 'png' | 'jpg' } | null> {
+  if (!src) return null;
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = async () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0);
+
+        const isPng = src.startsWith('data:image/png');
+        const mime = isPng ? 'image/png' : 'image/jpeg';
+        const dataUrl = canvas.toDataURL(mime, 0.85);
+
+        const res = await fetch(dataUrl);
+        const buffer = await res.arrayBuffer();
+
+        resolve({
+          buffer,
+          width: img.width,
+          height: img.height,
+          type: isPng ? 'png' : 'jpg',
+        });
+      } catch (err) {
+        console.warn('Error processing image for DOCX:', err);
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
 
 export async function generatePlanningDOCX(planning: WeeklyPlanning, settings?: SchoolSettings) {
   const schoolName = settings?.schoolName || 'ESCOLA DE EDUCAÇÃO INFANTIL';
   const teacherName = planning.teacher || settings?.teacherName || 'Professor(a)';
 
   const children: any[] = [];
+
+  // School Logo Header if available
+  if (settings?.logoUrl) {
+    const logoInfo = await getImageArrayBufferAndSize(settings.logoUrl);
+    if (logoInfo) {
+      const maxW = 120;
+      const maxH = 90;
+      const scale = Math.min(maxW / logoInfo.width, maxH / logoInfo.height, 1);
+      const width = Math.round(logoInfo.width * scale);
+      const height = Math.round(logoInfo.height * scale);
+
+      children.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [
+            new ImageRun({
+              data: logoInfo.buffer,
+              transformation: { width, height },
+              type: logoInfo.type,
+            })
+          ]
+        })
+      );
+    }
+  }
 
   // Title Header
   children.push(
@@ -136,8 +198,8 @@ export async function generatePlanningDOCX(planning: WeeklyPlanning, settings?: 
     planning.days.sexta
   ];
 
-  daysList.forEach((day) => {
-    if (!day) return;
+  for (const day of daysList) {
+    if (!day) continue;
 
     // Day Heading
     children.push(
@@ -156,7 +218,7 @@ export async function generatePlanningDOCX(planning: WeeklyPlanning, settings?: 
 
     // Routine
     if (day.routine && day.routine.length > 0) {
-      day.routine.forEach((r) => {
+      for (const r of day.routine) {
         children.push(
           new Paragraph({
             bullet: { level: 0 },
@@ -166,12 +228,38 @@ export async function generatePlanningDOCX(planning: WeeklyPlanning, settings?: 
             ]
           })
         );
-      });
+
+        if (r.images && r.images.length > 0) {
+          for (const imgSrc of r.images) {
+            const imgInfo = await getImageArrayBufferAndSize(imgSrc);
+            if (imgInfo) {
+              const maxW = 400;
+              const maxH = 260;
+              const scale = Math.min(maxW / imgInfo.width, maxH / imgInfo.height, 1);
+              const width = Math.round(imgInfo.width * scale);
+              const height = Math.round(imgInfo.height * scale);
+
+              children.push(
+                new Paragraph({
+                  alignment: AlignmentType.LEFT,
+                  children: [
+                    new ImageRun({
+                      data: imgInfo.buffer,
+                      transformation: { width, height },
+                      type: imgInfo.type,
+                    })
+                  ]
+                })
+              );
+            }
+          }
+        }
+      }
     }
 
     // Lessons
     if (day.lessons && day.lessons.length > 0) {
-      day.lessons.forEach((l) => {
+      for (const l of day.lessons) {
         children.push(
           new Paragraph({
             heading: HeadingLevel.HEADING_3,
@@ -234,12 +322,38 @@ export async function generatePlanningDOCX(planning: WeeklyPlanning, settings?: 
           );
         }
 
+        if (l.images && l.images.length > 0) {
+          for (const imgSrc of l.images) {
+            const imgInfo = await getImageArrayBufferAndSize(imgSrc);
+            if (imgInfo) {
+              const maxW = 450;
+              const maxH = 300;
+              const scale = Math.min(maxW / imgInfo.width, maxH / imgInfo.height, 1);
+              const width = Math.round(imgInfo.width * scale);
+              const height = Math.round(imgInfo.height * scale);
+
+              children.push(
+                new Paragraph({
+                  alignment: AlignmentType.LEFT,
+                  children: [
+                    new ImageRun({
+                      data: imgInfo.buffer,
+                      transformation: { width, height },
+                      type: imgInfo.type,
+                    })
+                  ]
+                })
+              );
+            }
+          }
+        }
+
         children.push(new Paragraph({ text: '' }));
-      });
+      }
     }
 
     children.push(new Paragraph({ text: '' }));
-  });
+  }
 
   const doc = new Document({
     sections: [
@@ -260,3 +374,4 @@ export async function generatePlanningDOCX(planning: WeeklyPlanning, settings?: 
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+

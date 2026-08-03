@@ -19,7 +19,12 @@ import {
   Boxes,
   ExternalLink,
   Layers,
-  Calendar
+  Calendar,
+  Eye,
+  BookMarked,
+  ArrowLeft,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { 
   WeeklyPlanning, 
@@ -27,11 +32,14 @@ import {
   RoutineItem, 
   Lesson, 
   SchoolSettings,
-  SavedLesson 
+  SavedLesson,
+  Story
 } from '../types';
 import { RichTextEditor } from './RichTextEditor';
 import { ImageUploader } from './ImageUploader';
 import { BnccSelectorModal } from './BnccSelectorModal';
+import { PlanningPreviewModal } from './PlanningPreviewModal';
+import { StorySelectorModal } from './StorySelectorModal';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
 import { DEFAULT_MATERIALS } from '../data/materialsData';
@@ -43,6 +51,8 @@ interface PlanningEditorProps {
   settings: SchoolSettings | null;
   onOpenAiAssistant: () => void;
   savedLessons: SavedLesson[];
+  stories?: Story[];
+  onClose?: () => void;
 }
 
 const DAYS_KEYS = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'] as const;
@@ -75,13 +85,138 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   onSaveFirebase,
   settings,
   onOpenAiAssistant,
-  savedLessons
+  savedLessons,
+  stories = [],
+  onClose
 }) => {
   const [activeDayKey, setActiveDayKey] = useState<DayKey>('segunda');
   const [bnccModalOpen, setBnccModalOpen] = useState(false);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<string>('Salvo');
   const [showImportLessonModal, setShowImportLessonModal] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [unsavedModalOpen, setUnsavedModalOpen] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isGeneratingDocx, setIsGeneratingDocx] = useState(false);
+  
+  // Track saved snapshot to detect unsaved modifications
+  const [lastSavedSnapshot, setLastSavedSnapshot] = useState<string>(() => JSON.stringify(currentPlanning));
+
+  useEffect(() => {
+    // When switching to a different planning, reset initial snapshot
+    setLastSavedSnapshot(JSON.stringify(currentPlanning));
+  }, [currentPlanning.id]);
+
+  const isDirty = JSON.stringify(currentPlanning) !== lastSavedSnapshot;
+
+  const handleSave = () => {
+    onSaveFirebase(currentPlanning);
+    setLastSavedSnapshot(JSON.stringify(currentPlanning));
+    setSaveStatus('Salvo com sucesso!');
+  };
+
+  const handleCloseEditor = () => {
+    if (isDirty) {
+      setUnsavedModalOpen(true);
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
+  const [storySelectorTarget, setStorySelectorTarget] = useState<{
+    type: 'routine' | 'lesson';
+    id: string;
+    targetTitle?: string;
+  } | null>(null);
+
+  const handleSelectStoryForTarget = (story: Story) => {
+    if (!storySelectorTarget) return;
+
+    const { type, id } = storySelectorTarget;
+    const currentDay = currentPlanning.days[activeDayKey];
+
+    if (type === 'routine') {
+      const updatedRoutine = currentDay.routine.map((item) => {
+        if (item.id !== id) return item;
+
+        const newTitle = item.title && item.title.trim() !== '' 
+          ? (item.title.toLowerCase().includes(story.title.toLowerCase()) ? item.title : `${item.title}: ${story.title}`)
+          : `CONTAÇÃO DE HISTÓRIA: ${story.title}`;
+
+        const storyDetails = `📖 História: "${story.title}" (${story.author || 'Autor desconhecido'})\nSinopse: ${story.description}${story.objectives ? `\nObjetivos: ${story.objectives}` : ''}`;
+        const newDesc = item.description ? `${storyDetails}\n\n${item.description}` : storyDetails;
+
+        const images = [...(item.images || [])];
+        if (story.imageUrl && !images.includes(story.imageUrl)) {
+          images.push(story.imageUrl);
+        }
+
+        return {
+          ...item,
+          title: newTitle,
+          description: newDesc,
+          images,
+        };
+      });
+
+      const updatedDay = { ...currentDay, routine: updatedRoutine };
+      const updatedPlanning = {
+        ...currentPlanning,
+        days: { ...currentPlanning.days, [activeDayKey]: updatedDay }
+      };
+      onChangePlanning(updatedPlanning);
+    } else if (type === 'lesson') {
+      const updatedLessons = currentDay.lessons.map((lesson) => {
+        if (lesson.id !== id) return lesson;
+
+        const storyDev = `<p><strong>📖 Livro / História:</strong> ${story.title} ${story.author ? `(Autor: ${story.author})` : ''}</p><p><strong>Faixa Etária:</strong> ${story.ageRange || 'Educação Infantil'}</p><p><strong>Sinopse:</strong> ${story.description}</p>${story.objectives ? `<p><strong>Objetivos Pedagógicos:</strong> ${story.objectives}</p>` : ''}<br/>${lesson.development || ''}`;
+
+        const images = [...(lesson.images || [])];
+        if (story.imageUrl && !images.includes(story.imageUrl)) {
+          images.push(story.imageUrl);
+        }
+
+        return {
+          ...lesson,
+          theme: story.title,
+          objectives: lesson.objectives ? `${lesson.objectives}\n${story.objectives}` : (story.objectives || lesson.objectives),
+          development: storyDev,
+          images,
+        };
+      });
+
+      const updatedDay = { ...currentDay, lessons: updatedLessons };
+      const updatedPlanning = {
+        ...currentPlanning,
+        days: { ...currentPlanning.days, [activeDayKey]: updatedDay }
+      };
+      onChangePlanning(updatedPlanning);
+    }
+
+    setStorySelectorTarget(null);
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      await generatePlanningPDF(currentPlanning, settings || undefined);
+    } catch (err) {
+      console.error('Erro ao gerar PDF:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handleExportDocx = async () => {
+    try {
+      setIsGeneratingDocx(true);
+      await generatePlanningDOCX(currentPlanning, settings || undefined);
+    } catch (err) {
+      console.error('Erro ao gerar DOCX:', err);
+    } finally {
+      setIsGeneratingDocx(false);
+    }
+  };
 
   // Auto-save trigger
   useEffect(() => {
@@ -252,6 +387,17 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
       {/* Top Action Bar */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3 sticky top-16 z-30 backdrop-blur-md bg-white/95 dark:bg-slate-900/95">
         <div className="flex items-center gap-3">
+          {onClose && (
+            <button
+              id="planning-close-btn"
+              onClick={handleCloseEditor}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center shrink-0"
+              title="Fechar / Voltar aos Planejamentos"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+
           <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 flex items-center justify-center font-bold">
             <BookOpen className="w-5 h-5" />
           </div>
@@ -259,43 +405,77 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
               {currentPlanning.className || 'Nova Turma'} – {currentPlanning.week || 'Semana'}
             </h1>
-            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              <span>{saveStatus}</span>
+            <div className="text-xs flex items-center gap-2 mt-0.5">
+              {isDirty ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  Alterações não salvas
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Salvo
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex items-center flex-wrap gap-2">
+          {/* Visualizar Impressão */}
+          <button
+            id="planning-preview-btn"
+            onClick={() => setPreviewModalOpen(true)}
+            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            <span>Visualizar Impressão</span>
+          </button>
+
           {/* Export PDF */}
           <button
             id="planning-export-pdf-btn"
-            onClick={() => generatePlanningPDF(currentPlanning, settings || undefined)}
-            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+            onClick={handleExportPdf}
+            disabled={isGeneratingPdf}
+            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <FileDown className="w-4 h-4" />
-            <span>Gerar PDF</span>
+            <span>{isGeneratingPdf ? 'Gerando PDF...' : 'Gerar PDF'}</span>
           </button>
 
           {/* Export DOCX */}
           <button
             id="planning-export-docx-btn"
-            onClick={() => generatePlanningDOCX(currentPlanning, settings || undefined)}
-            className="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+            onClick={handleExportDocx}
+            disabled={isGeneratingDocx}
+            className="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <FileText className="w-4 h-4" />
-            <span>Gerar Word (DOCX)</span>
+            <span>{isGeneratingDocx ? 'Gerando Word...' : 'Gerar Word (DOCX)'}</span>
           </button>
 
-          {/* Save Firebase */}
+          {/* Save Button */}
           <button
             id="planning-save-firebase-btn"
-            onClick={() => onSaveFirebase(currentPlanning)}
+            onClick={handleSave}
             className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all"
           >
             <Save className="w-4 h-4" />
-            <span>Salvar no Firebase</span>
+            <span>Salvar Planejamento</span>
           </button>
+
+          {/* Close/Exit Button */}
+          {onClose && (
+            <button
+              id="planning-exit-btn"
+              onClick={handleCloseEditor}
+              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+              title="Fechar Edição"
+            >
+              <X className="w-4 h-4" />
+              <span>Fechar</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -513,9 +693,21 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           type="text"
                           value={item.title}
                           onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
-                          placeholder="Título ex: ROTINA / ACOLHIDA"
+                          placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
                           className="flex-1 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                         />
+
+                        {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                          <button
+                            type="button"
+                            onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1 border border-amber-500/30 transition-colors flex-shrink-0"
+                            title="Selecionar uma história do Banco de Histórias"
+                          >
+                            <BookMarked className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Escolher História</span>
+                          </button>
+                        )}
                       </div>
 
                       {/* Reordering & Action Controls */}
@@ -672,9 +864,21 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                     {/* Theme & Objectives */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                          Tema da Aula
-                        </label>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                            Tema da Aula
+                          </label>
+                          {(lesson.subject === 'CONTAÇÃO DE HISTÓRIA' || /conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(lesson.subject + ' ' + lesson.theme)) && (
+                            <button
+                              type="button"
+                              onClick={() => setStorySelectorTarget({ type: 'lesson', id: lesson.id, targetTitle: 'Aula de Contação de História' })}
+                              className="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-md border border-amber-500/30 transition-colors"
+                            >
+                              <BookMarked className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Selecionar História do Banco</span>
+                            </button>
+                          )}
+                        </div>
                         <input
                           id={`lesson-theme-${lesson.id}`}
                           type="text"
@@ -824,6 +1028,80 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      <PlanningPreviewModal
+        isOpen={previewModalOpen}
+        onClose={() => setPreviewModalOpen(false)}
+        planning={currentPlanning}
+        settings={settings}
+        onExportPdf={handleExportPdf}
+        onExportDocx={handleExportDocx}
+        isGeneratingPdf={isGeneratingPdf}
+        isGeneratingDocx={isGeneratingDocx}
+      />
+
+      {/* Story Selector Modal */}
+      <StorySelectorModal
+        isOpen={!!storySelectorTarget}
+        onClose={() => setStorySelectorTarget(null)}
+        stories={stories}
+        onSelectStory={handleSelectStoryForTarget}
+        targetTitle={storySelectorTarget?.targetTitle}
+      />
+
+      {/* Unsaved Changes Confirmation Modal */}
+      {unsavedModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 shrink-0">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Alterações Não Salvas!</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Você fez edições neste planejamento.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              Deseja salvar as alterações realizadas antes de fechar o editor de planejamento?
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2">
+              <button
+                id="unsaved-modal-cancel-btn"
+                onClick={() => setUnsavedModalOpen(false)}
+                className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                Continuar Editando
+              </button>
+              <button
+                id="unsaved-modal-discard-btn"
+                onClick={() => {
+                  setUnsavedModalOpen(false);
+                  onClose?.();
+                }}
+                className="px-3.5 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors"
+              >
+                Sair sem Salvar
+              </button>
+              <button
+                id="unsaved-modal-save-btn"
+                onClick={() => {
+                  handleSave();
+                  setUnsavedModalOpen(false);
+                  onClose?.();
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Salvar e Sair</span>
+              </button>
             </div>
           </div>
         </div>
