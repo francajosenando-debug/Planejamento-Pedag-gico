@@ -1,38 +1,56 @@
 {
   "short_name": "Planejamento BNCC",
   "name": "Planejamento Pedagógico Infantil - Educação Infantil BNCC",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "prefer_related_applications": false,
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/pwa-192x192.png",
       "type": "image/png",
       "sizes": "192x192",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     },
     {
       "src": "/pwa-512x512.png",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ],
-  "id": "/",
-  "start_url": "/",
-  "background_color": "#0f172a",
-  "theme_color": "#2563eb",
-  "display": "standalone",
-  "orientation": "portrait-primary",
-  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Novo Planejamento",
+      "short_name": "Criar Plano",
+      "description": "Criar um novo plano de aula BNCC",
+      "url": "/?action=new_planning",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Aulas Bíblicas",
+      "short_name": "Aulas Bíblicas",
+      "description": "Banco de Lições e Aulas Bíblicas",
+      "url": "/?tab=banco-biblico",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "description": "Sistema completo de Planejamento Pedagógico para Educação Infantil com BNCC, Aulas Bíblicas, PDF, DOCX e IA."
 }
