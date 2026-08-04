@@ -1,4 +1,4 @@
-const CACHE_NAME = 'planejamento-bncc-v2';
+const CACHE_NAME = 'planejamento-bncc-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -11,40 +11,45 @@ const ASSETS_TO_CACHE = [
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
+        console.warn('ServiceWorker asset caching warning:', err);
+      });
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
+    Promise.all([
+      self.clients.claim(),
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cache) => {
+            if (cache !== CACHE_NAME) {
+              return caches.delete(cache);
+            }
+          })
+        );
+      })
+    ])
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Do not intercept non-GET requests or backend /api/ calls
-  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+  // Do not intercept non-http(s) requests or backend /api/ endpoints
+  if (!event.request.url.startsWith('http') || event.request.method !== 'GET' || event.request.url.includes('/api/')) {
     return;
   }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Fetch background refresh
+        // Background revalidation
         fetch(event.request).then((networkResponse) => {
-          if (networkResponse.status === 200) {
+          if (networkResponse && networkResponse.status === 200) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
           }
         }).catch(() => {});
@@ -61,7 +66,6 @@ self.addEventListener('fetch', (event) => {
         });
         return networkResponse;
       }).catch(() => {
-        // Fallback to index.html for navigation requests when offline
         if (event.request.mode === 'navigate') {
           return caches.match('/index.html');
         }

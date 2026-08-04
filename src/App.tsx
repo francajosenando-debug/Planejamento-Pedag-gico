@@ -94,34 +94,57 @@ export default function App() {
 
   // Listen for PWA Install Event & Auto-prompt on load
   useEffect(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
-    if (!isStandalone) {
-      const timer = setTimeout(() => {
-        setPwaModalOpen(true);
-      }, 1200);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+    const isStandalone = 
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (navigator as any).standalone || 
+      document.referrer.includes('android-app://');
 
-  useEffect(() => {
-    const handler = (e: any) => {
+    if (isStandalone) {
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setInstallPrompt(e);
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+      (window as any).deferredPwaPrompt = e;
+      setPwaModalOpen(true);
+    };
+
+    const handleAppInstalled = () => {
+      setInstallPrompt(null);
+      (window as any).deferredPwaPrompt = null;
+      setPwaModalOpen(false);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if ((window as any).deferredPwaPrompt) {
+      setInstallPrompt((window as any).deferredPwaPrompt);
+    }
+
+    const timer = setTimeout(() => {
       if (!isStandalone) {
         setPwaModalOpen(true);
       }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      clearTimeout(timer);
     };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstallPwa = () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      installPrompt.userChoice.then((choiceResult: any) => {
+    const activePrompt = installPrompt || (window as any).deferredPwaPrompt;
+    if (activePrompt) {
+      activePrompt.prompt();
+      activePrompt.userChoice.then((choiceResult: any) => {
         if (choiceResult.outcome === 'accepted') {
           setInstallPrompt(null);
+          (window as any).deferredPwaPrompt = null;
+          setPwaModalOpen(false);
         }
       });
     } else {
