@@ -92,18 +92,31 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Listen for PWA Install Event
+  // Listen for PWA Install Event & Auto-prompt on load
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    if (!isStandalone) {
+      const timer = setTimeout(() => {
+        setPwaModalOpen(true);
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   useEffect(() => {
     const handler = (e: any) => {
       e.preventDefault();
       setInstallPrompt(e);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+      if (!isStandalone) {
+        setPwaModalOpen(true);
+      }
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstallPwa = () => {
-    setPwaModalOpen(true);
     if (installPrompt) {
       installPrompt.prompt();
       installPrompt.userChoice.then((choiceResult: any) => {
@@ -111,6 +124,8 @@ export default function App() {
           setInstallPrompt(null);
         }
       });
+    } else {
+      setPwaModalOpen(true);
     }
   };
 
@@ -422,6 +437,7 @@ export default function App() {
         isOpen={pwaModalOpen}
         onClose={() => setPwaModalOpen(false)}
         installPrompt={installPrompt}
+        onInstallNative={handleInstallPwa}
       />
       <AuthModal
         isOpen={authModalOpen}
