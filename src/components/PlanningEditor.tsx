@@ -22,6 +22,7 @@ import {
   Calendar,
   Eye,
   BookMarked,
+  BookOpenCheck,
   ArrowLeft,
   X,
   AlertTriangle,
@@ -36,13 +37,15 @@ import {
   Lesson, 
   SchoolSettings,
   SavedLesson,
-  Story
+  Story,
+  BibleLesson
 } from '../types';
 import { RichTextEditor } from './RichTextEditor';
 import { ImageUploader } from './ImageUploader';
 import { BnccSelectorModal } from './BnccSelectorModal';
 import { PlanningPreviewModal } from './PlanningPreviewModal';
 import { StorySelectorModal } from './StorySelectorModal';
+import { BibleLessonSelectorModal } from './BibleLessonSelectorModal';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
 import { DEFAULT_MATERIALS } from '../data/materialsData';
@@ -56,6 +59,7 @@ interface PlanningEditorProps {
   savedLessons: SavedLesson[];
   onSaveLessonToBank?: (lesson: SavedLesson) => void;
   stories?: Story[];
+  bibleLessons?: BibleLesson[];
   onClose?: () => void;
 }
 
@@ -92,6 +96,7 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   savedLessons,
   onSaveLessonToBank,
   stories = [],
+  bibleLessons = [],
   onClose
 }) => {
   const [activeDayKey, setActiveDayKey] = useState<DayKey>('segunda');
@@ -332,6 +337,75 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
     }
 
     setStorySelectorTarget(null);
+  };
+
+  const [bibleSelectorTarget, setBibleSelectorTarget] = useState<{
+    type: 'routine' | 'lesson';
+    id: string;
+    targetTitle?: string;
+  } | null>(null);
+
+  const handleSelectBibleLessonForTarget = (bLesson: BibleLesson) => {
+    if (!bibleSelectorTarget) return;
+
+    const { type, id } = bibleSelectorTarget;
+    const currentDay = currentPlanning.days[activeDayKey];
+
+    if (type === 'routine') {
+      const updatedRoutine = currentDay.routine.map((item) => {
+        if (item.id !== id) return item;
+
+        const newTitle = item.title && item.title.trim() !== '' 
+          ? (item.title.toLowerCase().includes(bLesson.title.toLowerCase()) ? item.title : `AULA BÍBLICA: ${bLesson.title}`)
+          : `AULA BÍBLICA: ${bLesson.title}`;
+
+        const passageText = bLesson.passage ? `📖 Passagem: ${bLesson.passage}\n` : '';
+        const principleText = bLesson.principle ? `✨ Princípio: ${bLesson.principle}\n` : '';
+        const verseText = bLesson.keyVerse ? `💬 Versículo: "${bLesson.keyVerse}"\n` : '';
+        const objText = bLesson.objectives ? `\n📌 Objetivos:\n${bLesson.objectives}` : '';
+        const matText = bLesson.materials ? `\n🎨 Materiais:\n${bLesson.materials}` : '';
+        const devText = bLesson.development ? `\n📝 Desenvolvimento:\n${bLesson.development}` : '';
+
+        const fullDesc = `${passageText}${principleText}${verseText}${objText}${matText}${devText}`.trim();
+
+        return {
+          ...item,
+          title: newTitle,
+          description: fullDesc,
+        };
+      });
+
+      const updatedDay = { ...currentDay, routine: updatedRoutine };
+      const updatedPlanning = {
+        ...currentPlanning,
+        days: { ...currentPlanning.days, [activeDayKey]: updatedDay }
+      };
+      onChangePlanning(updatedPlanning);
+    } else if (type === 'lesson') {
+      const updatedLessons = currentDay.lessons.map((lesson) => {
+        if (lesson.id !== id) return lesson;
+
+        const bibleDev = `<p><strong>📖 Passagem Bíblica:</strong> ${bLesson.passage || 'Bíblia Sagrada'}</p>${bLesson.principle ? `<p><strong>✨ Princípio:</strong> ${bLesson.principle}</p>` : ''}${bLesson.keyVerse ? `<p><strong>💬 Versículo Chave:</strong> "${bLesson.keyVerse}"</p>` : ''}<br/>${bLesson.development || ''}`;
+
+        return {
+          ...lesson,
+          subject: 'AULA BÍBLICA / DEVOCIONAL',
+          theme: bLesson.title,
+          objectives: bLesson.objectives + (bLesson.keyVerse ? `\n\nVersículo Chave: "${bLesson.keyVerse}"` : ''),
+          development: bibleDev,
+          materials: bLesson.materials ? [bLesson.materials] : lesson.materials,
+        };
+      });
+
+      const updatedDay = { ...currentDay, lessons: updatedLessons };
+      const updatedPlanning = {
+        ...currentPlanning,
+        days: { ...currentPlanning.days, [activeDayKey]: updatedDay }
+      };
+      onChangePlanning(updatedPlanning);
+    }
+
+    setBibleSelectorTarget(null);
   };
 
   const handleExportPdf = async () => {
@@ -850,6 +924,18 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           </button>
                         )}
 
+                        {/b(í|i)bli|devocional|religi/i.test(item.title) && (
+                          <button
+                            type="button"
+                            onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1 border border-indigo-500/30 transition-colors flex-shrink-0"
+                            title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                          >
+                            <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>Escolher Aula Bíblica</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => handleGenerateRoutineWithAi(item)}
@@ -1014,6 +1100,18 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                       </div>
 
                       <div className="flex items-center gap-1.5">
+                        {/b(í|i)bli|devocional|religi/i.test(lesson.subject + ' ' + (lesson.theme || '')) && (
+                          <button
+                            type="button"
+                            onClick={() => setBibleSelectorTarget({ type: 'lesson', id: lesson.id, targetTitle: `Aula (${lesson.theme || lesson.subject || 'Aula Bíblica'})` })}
+                            className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all"
+                            title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                          >
+                            <BookOpenCheck className="w-3.5 h-3.5 text-indigo-200" />
+                            <span>Escolher Aula Bíblica</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
                           onClick={() => {
@@ -1503,6 +1601,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
         stories={stories}
         onSelectStory={handleSelectStoryForTarget}
         targetTitle={storySelectorTarget?.targetTitle}
+      />
+
+      {/* Bible Lesson Selector Modal */}
+      <BibleLessonSelectorModal
+        isOpen={!!bibleSelectorTarget}
+        onClose={() => setBibleSelectorTarget(null)}
+        lessons={bibleLessons}
+        onSelectLesson={handleSelectBibleLessonForTarget}
+        targetTitle={bibleSelectorTarget?.targetTitle}
       />
 
       {/* Unsaved Changes Confirmation Modal */}

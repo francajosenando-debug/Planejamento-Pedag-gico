@@ -21,9 +21,11 @@ import {
   Song, 
   Game, 
   SchoolSettings, 
-  UserProfile 
+  UserProfile,
+  BibleLesson
 } from './types';
 import { SAMPLE_PLANNING, SAMPLE_LESSONS, SAMPLE_STORIES, SAMPLE_SONGS, SAMPLE_GAMES } from './data/sampleData';
+import { SAMPLE_BIBLE_LESSONS } from './data/sampleBibleLessons';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { PlanningEditor } from './components/PlanningEditor';
@@ -33,10 +35,11 @@ import { StoryBank } from './components/StoryBank';
 import { SongBank } from './components/SongBank';
 import { GameBank } from './components/GameBank';
 import { BnccExplorer } from './components/BnccExplorer';
-import { MaterialsBank } from './components/MaterialsBank';
+import { BibleBank } from './components/BibleBank';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { PwaInstallModal } from './components/PwaInstallModal';
 import { LoginGate } from './components/LoginGate';
 
 export default function App() {
@@ -56,6 +59,7 @@ export default function App() {
   const [stories, setStories] = useState<Story[]>(SAMPLE_STORIES);
   const [songs, setSongs] = useState<Song[]>(SAMPLE_SONGS);
   const [games, setGames] = useState<Game[]>(SAMPLE_GAMES);
+  const [bibleLessons, setBibleLessons] = useState<BibleLesson[]>(SAMPLE_BIBLE_LESSONS);
 
   const [settings, setSettings] = useState<SchoolSettings | null>({
     userId: 'default-user',
@@ -72,6 +76,7 @@ export default function App() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+  const [pwaModalOpen, setPwaModalOpen] = useState(false);
 
   // PWA Install Prompt State
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -98,13 +103,15 @@ export default function App() {
   }, []);
 
   const handleInstallPwa = () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    installPrompt.userChoice.then((choiceResult: any) => {
-      if (choiceResult.outcome === 'accepted') {
-        setInstallPrompt(null);
-      }
-    });
+    setPwaModalOpen(true);
+    if (installPrompt) {
+      installPrompt.prompt();
+      installPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          setInstallPrompt(null);
+        }
+      });
+    }
   };
 
   // Firebase Auth Listener & Firestore Data Fetching
@@ -304,6 +311,7 @@ export default function App() {
             stories={stories}
             songs={songs}
             games={games}
+            bibleLessons={bibleLessons}
             onOpenAiAssistant={() => setAiAssistantOpen(true)}
             onOpenSettings={() => setSettingsModalOpen(true)}
             onSelectPlanning={(p) => {
@@ -324,7 +332,11 @@ export default function App() {
             settings={settings}
             onOpenAiAssistant={() => setAiAssistantOpen(true)}
             savedLessons={lessons}
+            onSaveLessonToBank={(newSaved) => {
+              setLessons([newSaved, ...lessons]);
+            }}
             stories={stories}
+            bibleLessons={bibleLessons}
             onClose={() => setActiveTab('planejamentos')}
           />
         )}
@@ -388,8 +400,16 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'banco-materiais' && (
-          <MaterialsBank />
+        {(activeTab === 'banco-materiais' || activeTab === 'banco-biblico') && (
+          <BibleBank
+            bibleLessons={bibleLessons}
+            onSaveBibleLesson={(bLesson) => {
+              const exists = bibleLessons.some(x => x.id === bLesson.id);
+              setBibleLessons(exists ? bibleLessons.map(x => x.id === bLesson.id ? bLesson : x) : [bLesson, ...bibleLessons]);
+            }}
+            onDeleteBibleLesson={(id) => setBibleLessons(bibleLessons.filter(x => x.id !== id))}
+            onToggleFavorite={(id) => setBibleLessons(bibleLessons.map(x => x.id === id ? { ...x, isFavorite: !x.isFavorite } : x))}
+          />
         )}
 
         {activeTab === 'banco-bncc' && (
@@ -398,6 +418,11 @@ export default function App() {
       </main>
 
       {/* Global Modals */}
+      <PwaInstallModal
+        isOpen={pwaModalOpen}
+        onClose={() => setPwaModalOpen(false)}
+        installPrompt={installPrompt}
+      />
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
@@ -435,6 +460,22 @@ export default function App() {
             materials: lessonData.materials || [],
             notes: lessonData.notes || ''
           };
+
+          // Automatically save AI lesson to lesson bank as well
+          const savedAiLesson: SavedLesson = {
+            id: `ai-lesson-${Date.now()}`,
+            userId: 'current-user',
+            name: lessonData.name || lessonData.theme || 'Aula Gerada por IA',
+            subject: newLesson.subject,
+            theme: newLesson.theme,
+            objectives: newLesson.objectives,
+            bnccCodes: newLesson.bnccCodes,
+            development: newLesson.development,
+            materials: newLesson.materials,
+            notes: newLesson.notes,
+            createdAt: new Date().toISOString()
+          };
+          setLessons(prev => [savedAiLesson, ...prev]);
 
           if (currentPlanning) {
             const dayKey = 'segunda';

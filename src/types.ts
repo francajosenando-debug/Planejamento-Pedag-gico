@@ -146,3 +146,19 @@ export interface MaterialItem {
   name: string;
   category: string;
 }
+
+export interface BibleLesson {
+  id: string;
+  userId: string;
+  title: string;
+  passage: string;
+  principle: string;
+  keyVerse: string;
+  objectives: string;
+  ageRange: string;
+  materials: string;
+  development: string;
+  imageUrl?: string;
+  isFavorite?: boolean;
+  createdAt: string;
+}

@@ -9,7 +9,7 @@ import {
   ListOrdered, 
   Settings, 
   Sparkles, 
-  Boxes, 
+  BookOpenCheck, 
   Calendar, 
   ArrowRight,
   Bookmark,
@@ -18,7 +18,7 @@ import {
   FileCheck,
   Award
 } from 'lucide-react';
-import { WeeklyPlanning, SavedLesson, Story, Song, Game } from '../types';
+import { WeeklyPlanning, SavedLesson, Story, Song, Game, BibleLesson } from '../types';
 
 interface DashboardProps {
   setActiveTab: (tab: string) => void;
@@ -27,6 +27,7 @@ interface DashboardProps {
   stories: Story[];
   songs: Song[];
   games: Game[];
+  bibleLessons?: BibleLesson[];
   onOpenAiAssistant: () => void;
   onOpenSettings: () => void;
   onSelectPlanning: (planning: WeeklyPlanning) => void;
@@ -39,6 +40,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   stories,
   songs,
   games,
+  bibleLessons = [],
   onOpenAiAssistant,
   onOpenSettings,
   onSelectPlanning,
@@ -108,14 +110,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
       action: () => setActiveTab('banco-brincadeiras')
     },
     {
-      id: 'banco-materiais',
-      title: 'Banco de Materiais',
-      description: 'Catálogo de materiais escolares e sucatas de uso frequente',
-      icon: Boxes,
-      color: 'from-teal-500 to-emerald-600',
-      textColor: 'text-teal-700 dark:text-teal-300',
-      badge: 'Catálogo',
-      action: () => setActiveTab('banco-materiais')
+      id: 'banco-biblico',
+      title: 'Aulas Bíblicas',
+      description: 'Acervo de lições bíblicas, princípios morais, versículos e devocionais infantis',
+      icon: BookOpenCheck,
+      color: 'from-indigo-500 to-purple-600',
+      textColor: 'text-indigo-700 dark:text-indigo-300',
+      count: bibleLessons.length,
+      action: () => setActiveTab('banco-biblico')
     },
     {
       id: 'banco-bncc',

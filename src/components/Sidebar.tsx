@@ -15,7 +15,7 @@ import {
   User as UserIcon, 
   LogOut, 
   Download,
-  Boxes,
+  BookOpenCheck,
   Menu,
   X,
   ChevronRight
@@ -67,9 +67,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         { id: 'banco-aulas', label: 'Planos de Aula', icon: Library, color: 'text-purple-600 dark:text-purple-400' },
         { id: 'banco-historias', label: 'Histórias Infantil', icon: BookMarked, color: 'text-amber-600 dark:text-amber-400' },
+        { id: 'banco-biblico', label: 'Aulas Bíblicas', icon: BookOpenCheck, color: 'text-indigo-600 dark:text-indigo-400' },
         { id: 'banco-musicas', label: 'Músicas e Cantigas', icon: Music, color: 'text-pink-600 dark:text-pink-400' },
         { id: 'banco-brincadeiras', label: 'Brincadeiras e Jogos', icon: Gamepad2, color: 'text-cyan-600 dark:text-cyan-400' },
-        { id: 'banco-materiais', label: 'Materiais & Recursos', icon: Boxes, color: 'text-teal-600 dark:text-teal-400' },
         { id: 'banco-bncc', label: 'Consulta BNCC', icon: FileText, color: 'text-sky-600 dark:text-sky-400' },
       ]
     }
@@ -171,16 +171,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
         
         {/* PWA Install */}
-        {installPrompt && (
-          <button
-            id="sidebar-pwa-install-btn"
-            onClick={onInstallPwa}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            <span>Instalar Aplicativo (PWA)</span>
-          </button>
-        )}
+        <button
+          id="sidebar-pwa-install-btn"
+          onClick={onInstallPwa}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold transition-all shadow-sm"
+        >
+          <Download className="w-4 h-4 text-emerald-200" />
+          <span>Instalar App (Android / iOS)</span>
+        </button>
 
         {/* Dark Mode & Settings Row */}
         <div className="flex items-center gap-1.5">
