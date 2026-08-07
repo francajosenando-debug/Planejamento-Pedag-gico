@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sem Conexão | CCC Planejamento</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .card {
+      background-color: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(51, 65, 85, 0.8);
+      border-radius: 1.5rem;
+      padding: 2.5rem 2rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+    }
+    .icon-box {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(29, 78, 216, 0.3));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+    }
+    .icon-box svg {
+      width: 40px;
+      height: 40px;
+      stroke: #60a5fa;
+    }
+    h1 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: #ffffff;
+    }
+    p {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.85rem 1.75rem;
+      border-radius: 0.875rem;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, #1d4ed8, #1e40af);
+      transform: translateY(-1px);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+      padding: 0.35rem 0.85rem;
+      border-radius: 2rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #f59e0b;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="status-badge">
+      <span class="status-dot"></span>
+      <span>Você está sem conexão com a internet</span>
+    </div>
+    <div class="icon-box">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12 18.75h.008v.008H12v-.008Z" />
+      </svg>
+    </div>
+    <h1>Modo Offline Ativo</h1>
+    <p>Sua conexão caiu, mas não se preocupe! Seus planejamentos salvos anteriormente Continuam acessíveis. O sistema reconectará automaticamente assim que sua internet voltar.</p>
+    <button class="btn" onclick="window.location.reload()">
+      Tentar Reconectar
+    </button>
+  </div>
+
+  <script>
+    window.addEventListener('online', function() {
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

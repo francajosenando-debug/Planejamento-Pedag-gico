@@ -120,7 +120,7 @@ export const LoginGate: React.FC<LoginGateProps> = ({ darkMode, setDarkMode, onL
           </div>
           <div>
             <h1 className="font-black text-base sm:text-lg bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent leading-tight">
-              Planejamento Infantil BNCC
+              CCC Planejamento
             </h1>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               Gestão Pedagógica para Professores

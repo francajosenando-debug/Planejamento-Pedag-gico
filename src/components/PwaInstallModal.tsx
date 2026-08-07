@@ -39,7 +39,7 @@ export const PwaInstallModal: React.FC<PwaInstallModalProps> = ({
                 <Sparkles className="w-4 h-4 text-amber-400" />
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Planejamento BNCC como App Nativo
+                CCC Planejamento como App Nativo
               </p>
             </div>
           </div>

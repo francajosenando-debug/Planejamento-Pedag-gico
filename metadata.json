@@ -1,5 +1,5 @@
 {
-  "name": "Planejamento Pedagógico",
+  "name": "CCC Planejamento",
   "description": "Sistema completo de Planejamento Pedagógico para Educação Infantil com Banco de BNCC, Aulas, Histórias, Músicas, Exportação PDF/Word e Assistente IA.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

@@ -64,7 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="font-extrabold text-base sm:text-lg bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-800 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent leading-tight">
-                Planejamento Pedagógico
+                CCC Planejamento
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Educação Infantil BNCC

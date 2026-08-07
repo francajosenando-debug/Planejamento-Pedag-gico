@@ -40,7 +40,9 @@ import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
 import { PwaInstallModal } from './components/PwaInstallModal';
+import { PwaReloadPrompt } from './components/PwaReloadPrompt';
 import { LoginGate } from './components/LoginGate';
+import { WifiOff } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -78,8 +80,22 @@ export default function App() {
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
   const [pwaModalOpen, setPwaModalOpen] = useState(false);
 
-  // PWA Install Prompt State
+  // PWA Install Prompt & Network State
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isOffline, setIsOffline] = useState<boolean>(typeof navigator !== 'undefined' ? !navigator.onLine : false);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Listen for dark mode changes
   useEffect(() => {
@@ -322,6 +338,14 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors selection:bg-blue-500 selection:text-white">
       
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="bg-amber-500 text-amber-950 font-extrabold text-xs px-4 py-2 text-center flex items-center justify-center gap-2 shadow-md animate-in fade-in sticky top-0 z-40">
+          <WifiOff className="w-4 h-4 flex-shrink-0" />
+          <span>Você está navegando no modo offline. Seus dados e planejamentos salvos continuam acessíveis.</span>
+        </div>
+      )}
+
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
@@ -456,6 +480,7 @@ export default function App() {
       </main>
 
       {/* Global Modals */}
+      <PwaReloadPrompt />
       <PwaInstallModal
         isOpen={pwaModalOpen}
         onClose={() => setPwaModalOpen(false)}
