@@ -180,55 +180,15 @@ export const PlanningList: React.FC<PlanningListProps> = ({
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1">
-                  <button
-                    id={`list-pdf-btn-${p.id}`}
-                    onClick={() => generatePlanningPDF(p, settings || undefined)}
-                    className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors"
-                    title="Exportar PDF"
-                  >
-                    <FileDown className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    id={`list-docx-btn-${p.id}`}
-                    onClick={() => generatePlanningDOCX(p, settings || undefined)}
-                    className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 transition-colors"
-                    title="Exportar Word"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    id={`list-duplicate-btn-${p.id}`}
-                    onClick={() => onDuplicatePlanning(p)}
-                    className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 transition-colors"
-                    title="Duplicar"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    id={`list-delete-btn-${p.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPlanningToDelete(p);
-                    }}
-                    className="p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors"
-                    title="Excluir Planejamento"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1.5">
+              {/* Actions Footer */}
+              <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                {/* Main View / Edit buttons */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     id={`list-view-btn-${p.id}`}
                     onClick={() => setPreviewPlanning(p)}
-                    className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1 transition-colors shadow-sm"
-                    title="Visualizar Planejamento"
+                    className="py-2 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    title="Visualizar Impressão"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Visualizar</span>
@@ -237,11 +197,61 @@ export const PlanningList: React.FC<PlanningListProps> = ({
                   <button
                     id={`list-edit-btn-${p.id}`}
                     onClick={() => onSelectPlanning(p)}
-                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1 transition-colors shadow-sm"
+                    className="py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    title="Editar Planejamento"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     <span>Editar</span>
                   </button>
+                </div>
+
+                {/* Secondary Utilities toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-100/80 dark:border-slate-800/80">
+                  <div className="flex items-center gap-1">
+                    <button
+                      id={`list-pdf-btn-${p.id}`}
+                      onClick={() => generatePlanningPDF(p, settings || undefined)}
+                      className="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold text-[11px] flex items-center gap-1 transition-colors"
+                      title="Exportar PDF"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>PDF</span>
+                    </button>
+
+                    <button
+                      id={`list-docx-btn-${p.id}`}
+                      onClick={() => generatePlanningDOCX(p, settings || undefined)}
+                      className="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold text-[11px] flex items-center gap-1 transition-colors"
+                      title="Exportar Word"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>Word</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      id={`list-duplicate-btn-${p.id}`}
+                      onClick={() => onDuplicatePlanning(p)}
+                      className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 text-slate-700 font-bold text-[11px] flex items-center gap-1 transition-colors"
+                      title="Duplicar Planejamento"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Duplicar</span>
+                    </button>
+
+                    <button
+                      id={`list-delete-btn-${p.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPlanningToDelete(p);
+                      }}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-600 dark:bg-slate-800 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
+                      title="Excluir Planejamento"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
