@@ -49,6 +49,7 @@ import { BibleLessonSelectorModal } from './BibleLessonSelectorModal';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
 import { DEFAULT_MATERIALS } from '../data/materialsData';
+import { DEFAULT_ROUTINE_PRESETS, RoutinePreset } from '../data/routinePresetsData';
 
 interface PlanningEditorProps {
   currentPlanning: WeeklyPlanning;
@@ -114,6 +115,58 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   const [importSearchTerm, setImportSearchTerm] = useState<string>('');
   const [importSubjectFilter, setImportSubjectFilter] = useState<string>('todos');
   const [importPreviewLesson, setImportPreviewLesson] = useState<SavedLesson | null>(null);
+
+  // Preset Descriptions State (persisted in localStorage)
+  const [routinePresets, setRoutinePresets] = useState<RoutinePreset[]>(() => {
+    try {
+      const saved = localStorage.getItem('ccc_routine_presets');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return DEFAULT_ROUTINE_PRESETS;
+  });
+
+  const [presetModalOpen, setPresetModalOpen] = useState(false);
+  const [newPresetTitle, setNewPresetTitle] = useState('');
+  const [newPresetCategory, setNewPresetCategory] = useState('Geral');
+  const [newPresetDesc, setNewPresetDesc] = useState('');
+
+  const handleSaveCustomPreset = () => {
+    if (!newPresetTitle.trim() || !newPresetDesc.trim()) {
+      alert('Por favor, preencha o título e a descrição da rotina.');
+      return;
+    }
+    const newPreset: RoutinePreset = {
+      id: `preset-custom-${Date.now()}`,
+      category: newPresetCategory.trim() || 'Geral',
+      title: newPresetTitle.trim(),
+      description: newPresetDesc.trim()
+    };
+    const updated = [newPreset, ...routinePresets];
+    setRoutinePresets(updated);
+    try {
+      localStorage.setItem('ccc_routine_presets', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+    setNewPresetTitle('');
+    setNewPresetCategory('Geral');
+    setNewPresetDesc('');
+    setPresetModalOpen(false);
+    setToastMessage('Descrição pré-configurada salva com sucesso!');
+    setTimeout(() => setToastMessage(''), 3500);
+  };
+
+  const handleDeletePreset = (id: string) => {
+    const updated = routinePresets.filter(p => p.id !== id);
+    setRoutinePresets(updated);
+    try {
+      localStorage.setItem('ccc_routine_presets', JSON.stringify(updated));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Block AI Assistant States
   const [generatingRoutineId, setGeneratingRoutineId] = useState<string | null>(null);
@@ -989,14 +1042,61 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                       </div>
                     </div>
 
-                    <textarea
-                      id={`routine-desc-${item.id}`}
-                      value={item.description}
-                      onChange={(e) => handleUpdateRoutine(item.id, 'description', e.target.value)}
-                      placeholder="- Higienização: Banheiro e água&#10;- Chamada e calendário&#10;- Devocional"
-                      rows={2}
-                      className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 outline-none"
-                    />
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                          Descrição / Atividades da Rotina
+                        </label>
+
+                        <div className="flex items-center gap-2">
+                          {/* Preset selector dropdown */}
+                          <select
+                            defaultValue=""
+                            onChange={(e) => {
+                              const selectedId = e.target.value;
+                              if (!selectedId) return;
+                              const found = routinePresets.find(p => p.id === selectedId);
+                              if (found) {
+                                handleUpdateRoutine(item.id, 'description', found.description);
+                              }
+                              e.target.value = "";
+                            }}
+                            className="px-2 py-0.5 text-[11px] font-semibold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 outline-none hover:border-blue-500"
+                          >
+                            <option value="" disabled>📋 Inserir Descrição Pronta...</option>
+                            {routinePresets.map((preset) => (
+                              <option key={preset.id} value={preset.id}>
+                                [{preset.category}] {preset.title}
+                              </option>
+                            ))}
+                          </select>
+
+                          {/* Add custom preset button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setNewPresetTitle(item.title || '');
+                              setNewPresetDesc(item.description || '');
+                              setPresetModalOpen(true);
+                            }}
+                            className="px-2 py-0.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-colors"
+                            title="Salvar esta descrição como um modelo pré-configurado"
+                          >
+                            <Plus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            <span>Nova Descrição Pronta</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <textarea
+                        id={`routine-desc-${item.id}`}
+                        value={item.description}
+                        onChange={(e) => handleUpdateRoutine(item.id, 'description', e.target.value)}
+                        placeholder="- Higienização: Banheiro e água&#10;- Chamada e calendário&#10;- Devocional"
+                        rows={2}
+                        className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
 
                     {/* Image Upload for Routine */}
                     <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
@@ -1607,10 +1707,125 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
       <BibleLessonSelectorModal
         isOpen={!!bibleSelectorTarget}
         onClose={() => setBibleSelectorTarget(null)}
-        lessons={bibleLessons}
-        onSelectLesson={handleSelectBibleLessonForTarget}
+        bibleLessons={bibleLessons}
+        onSelectBibleLesson={handleSelectBibleLessonForTarget}
         targetTitle={bibleSelectorTarget?.targetTitle}
       />
+
+      {/* Custom Preset Creation Modal */}
+      {presetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Criar Nova Descrição Pronta</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Cadastre um modelo para reaproveitar em qualquer planejamento</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPresetModalOpen(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Título da Rotina / Descrição
+                </label>
+                <input
+                  type="text"
+                  value={newPresetTitle}
+                  onChange={(e) => setNewPresetTitle(e.target.value)}
+                  placeholder="Ex: Acolhida com Música e Oração"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Categoria
+                </label>
+                <input
+                  type="text"
+                  value={newPresetCategory}
+                  onChange={(e) => setNewPresetCategory(e.target.value)}
+                  placeholder="Ex: Acolhida, Higiene, Recreação, etc."
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Conteúdo da Descrição (Atividades)
+                </label>
+                <textarea
+                  value={newPresetDesc}
+                  onChange={(e) => setNewPresetDesc(e.target.value)}
+                  rows={4}
+                  placeholder="- Item 1&#10;- Item 2&#10;- Item 3"
+                  className="w-full p-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            {/* List of existing custom presets */}
+            {routinePresets.length > 0 && (
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2">
+                  Descrições Cadastradas ({routinePresets.length}):
+                </p>
+                <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
+                  {routinePresets.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-xs gap-2"
+                    >
+                      <div className="truncate">
+                        <span className="font-bold text-slate-800 dark:text-slate-200">[{preset.category}] {preset.title}</span>
+                      </div>
+                      {preset.id.startsWith('preset-custom-') && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePreset(preset.id)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                          title="Excluir modelo"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setPresetModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveCustomPreset}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Salvar Descrição Pronta</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Unsaved Changes Confirmation Modal */}
       {unsavedModalOpen && (
