@@ -28,7 +28,8 @@ import {
   AlertTriangle,
   FolderPlus,
   FolderDown,
-  Search
+  Search,
+  ListChecks
 } from 'lucide-react';
 import { 
   WeeklyPlanning, 
@@ -46,6 +47,7 @@ import { BnccSelectorModal } from './BnccSelectorModal';
 import { PlanningPreviewModal } from './PlanningPreviewModal';
 import { StorySelectorModal } from './StorySelectorModal';
 import { BibleLessonSelectorModal } from './BibleLessonSelectorModal';
+import { RoutinePresetModal } from './RoutinePresetModal';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
 import { DEFAULT_MATERIALS } from '../data/materialsData';
@@ -271,6 +273,27 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
     id: string;
     targetTitle?: string;
   } | null>(null);
+
+  const [routinePresetTarget, setRoutinePresetTarget] = useState<{
+    routineId: string;
+    mode: 'title' | 'description';
+    currentValue: string;
+  } | null>(null);
+
+  const handleSelectRoutinePreset = (selectedValue: string, append?: boolean) => {
+    if (!routinePresetTarget) return;
+    const { routineId, mode, currentValue } = routinePresetTarget;
+
+    if (mode === 'title') {
+      handleUpdateRoutine(routineId, 'title', selectedValue);
+    } else if (mode === 'description') {
+      if (append && currentValue && currentValue.trim().length > 0) {
+        handleUpdateRoutine(routineId, 'description', `${currentValue}\n\n${selectedValue}`);
+      } else {
+        handleUpdateRoutine(routineId, 'description', selectedValue);
+      }
+    }
+  };
 
   const handleSelectStoryForTarget = (story: Story) => {
     if (!storySelectorTarget) return;
@@ -909,14 +932,25 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           className="w-32 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300"
                         />
 
-                        <input
-                          id={`routine-title-${item.id}`}
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
-                          placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
-                          className="flex-1 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                        />
+                        <div className="relative flex-1 flex items-center">
+                          <input
+                            id={`routine-title-${item.id}`}
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
+                            placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
+                            className="w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'title', currentValue: item.title })}
+                            className="px-2 py-0.5 ml-1.5 rounded-md bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-[11px] flex items-center gap-1 transition-colors flex-shrink-0"
+                            title="Escolher um título pré-configurado de rotina"
+                          >
+                            <ListChecks className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span className="hidden sm:inline">Modelos</span>
+                          </button>
+                        </div>
 
                         {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
                           <button
@@ -993,6 +1027,21 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 pb-0.5">
+                      <label htmlFor={`routine-desc-${item.id}`} className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        Descrição do Período
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'description', currentValue: item.description })}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-[11px] flex items-center gap-1 border border-slate-200 dark:border-slate-700 transition-colors"
+                        title="Escolher modelo pré-configurado de descrição"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        <span>Modelos de Descrição</span>
+                      </button>
                     </div>
 
                     <textarea
@@ -1609,6 +1658,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
         stories={stories}
         onSelectStory={handleSelectStoryForTarget}
         targetTitle={storySelectorTarget?.targetTitle}
+      />
+
+      {/* Routine Title and Description Preset Modal */}
+      <RoutinePresetModal
+        isOpen={routinePresetTarget !== null}
+        onClose={() => setRoutinePresetTarget(null)}
+        mode={routinePresetTarget?.mode || 'title'}
+        currentValue={routinePresetTarget?.currentValue || ''}
+        onSelect={handleSelectRoutinePreset}
       />
 
       {/* Bible Lesson Selector Modal */}
