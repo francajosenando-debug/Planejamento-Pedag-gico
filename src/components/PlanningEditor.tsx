@@ -628,8 +628,8 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   return (
     <div className="space-y-6 pb-16 animate-in fade-in duration-300">
       
-      {/* Top Action Bar - Fixed to Top & Perfectly Container Aligned */}
-      <div className="sticky top-2 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md p-3.5 mb-6 transition-all flex flex-wrap items-center justify-between gap-3">
+      {/* Top Action Bar - Clean Non-Sticky Header Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm mb-6 transition-all flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           {onClose && (
             <button
@@ -853,8 +853,8 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
           
           {/* Day SubHeader & Date Config */}
           <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-3">
-              <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+            <div className="flex flex-wrap items-center gap-2.5 max-w-full">
+              <span className="font-extrabold text-sm text-slate-900 dark:text-white shrink-0">
                 {DAY_LABELS[activeDayKey]}
               </span>
               <input 
@@ -863,7 +863,7 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                 value={currentDay.dateStr || ''}
                 onChange={(e) => updateDayField({ ...currentDay, dateStr: e.target.value })}
                 placeholder="Data ex: 27/07"
-                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+                className="w-28 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               />
               <input 
                 id={`day-subheader-input-${activeDayKey}`}
@@ -871,15 +871,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                 value={currentDay.subHeader || ''}
                 onChange={(e) => updateDayField({ ...currentDay, subHeader: e.target.value })}
                 placeholder="Obs ex: PEDAGÓGICA"
-                className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
+                className="w-36 sm:w-48 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 id="import-from-bank-btn"
                 onClick={() => setShowImportLessonModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold hover:bg-purple-200 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 rounded-xl bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-semibold hover:bg-purple-200 transition-colors flex items-center gap-1.5"
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>Usar Aula do Banco</span>
@@ -985,56 +985,58 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                     </div>
 
                     {/* Quick Tools & Preset Selectors Bar */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
-                      <button
-                        type="button"
-                        onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'title', currentValue: item.title })}
-                        className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-[11px] flex items-center gap-1.5 transition-colors"
-                        title="Escolher um título pré-configurado de rotina"
-                      >
-                        <ListChecks className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                        <span>Modelos de Título</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'description', currentValue: item.description })}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold text-[11px] flex items-center gap-1.5 transition-colors"
-                        title="Escolher modelo pré-configurado de descrição"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span>Modelos de Descrição</span>
-                      </button>
-
-                      {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-100/70 dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex flex-wrap items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
-                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1.5 border border-amber-500/30 transition-colors"
-                          title="Selecionar uma história do Banco de Histórias"
+                          onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'title', currentValue: item.title })}
+                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-slate-200 dark:border-slate-700 font-bold text-[11px] flex items-center gap-1.5 transition-colors shadow-xs"
+                          title="Escolher um título pré-configurado de rotina"
                         >
-                          <BookMarked className="w-3.5 h-3.5 text-amber-500" />
-                          <span>Escolher História</span>
+                          <ListChecks className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                          <span>Modelos de Título</span>
                         </button>
-                      )}
 
-                      {/b(í|i)bli|devocional|religi/i.test(item.title) && (
                         <button
                           type="button"
-                          onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
-                          className="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1.5 border border-indigo-500/30 transition-colors"
-                          title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                          onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'description', currentValue: item.description })}
+                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 font-bold text-[11px] flex items-center gap-1.5 transition-colors shadow-xs"
+                          title="Escolher modelo pré-configurado de descrição"
                         >
-                          <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
-                          <span>Escolher Aula Bíblica</span>
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>Modelos de Descrição</span>
                         </button>
-                      )}
+
+                        {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                          <button
+                            type="button"
+                            onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1.5 border border-amber-500/30 transition-colors"
+                            title="Selecionar uma história do Banco de Histórias"
+                          >
+                            <BookMarked className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Escolher História</span>
+                          </button>
+                        )}
+
+                        {/b(í|i)bli|devocional|religi/i.test(item.title) && (
+                          <button
+                            type="button"
+                            onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1.5 border border-indigo-500/30 transition-colors"
+                            title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                          >
+                            <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>Escolher Aula Bíblica</span>
+                          </button>
+                        )}
+                      </div>
 
                       <button
                         type="button"
                         onClick={() => handleGenerateRoutineWithAi(item)}
                         disabled={generatingRoutineId === item.id}
-                        className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-sm transition-all disabled:opacity-50 ml-auto"
+                        className="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all disabled:opacity-50"
                         title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
