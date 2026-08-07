@@ -13,7 +13,7 @@ interface StorySelectorModalProps {
 export const StorySelectorModal: React.FC<StorySelectorModalProps> = ({
   isOpen,
   onClose,
-  stories,
+  stories = [],
   onSelectStory,
   targetTitle = 'Contação de História'
 }) => {
@@ -21,12 +21,15 @@ export const StorySelectorModal: React.FC<StorySelectorModalProps> = ({
 
   if (!isOpen) return null;
 
-  const filteredStories = stories.filter((story) => {
+  const safeStories = Array.isArray(stories) ? stories : [];
+
+  const filteredStories = safeStories.filter((story) => {
+    if (!story) return false;
     const term = searchTerm.toLowerCase();
     return (
-      story.title.toLowerCase().includes(term) ||
-      story.author.toLowerCase().includes(term) ||
-      story.description.toLowerCase().includes(term) ||
+      (story.title || '').toLowerCase().includes(term) ||
+      (story.author || '').toLowerCase().includes(term) ||
+      (story.description || '').toLowerCase().includes(term) ||
       (story.objectives && story.objectives.toLowerCase().includes(term))
     );
   });

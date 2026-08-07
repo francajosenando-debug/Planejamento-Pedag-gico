@@ -13,18 +13,18 @@ interface BnccSelectorModalProps {
 export const BnccSelectorModal: React.FC<BnccSelectorModalProps> = ({
   isOpen,
   onClose,
-  selectedCodes,
+  selectedCodes = [],
   onSelectCodes,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [ageFilter, setAgeFilter] = useState<string>('ALL');
   const [fieldFilter, setFieldFilter] = useState<string>('ALL');
-  const [tempCodes, setTempCodes] = useState<string[]>(selectedCodes);
+  const [tempCodes, setTempCodes] = useState<string[]>(Array.isArray(selectedCodes) ? selectedCodes : []);
 
   // Sync temp state when modal opens
   React.useEffect(() => {
     if (isOpen) {
-      setTempCodes(selectedCodes);
+      setTempCodes(Array.isArray(selectedCodes) ? selectedCodes : []);
     }
   }, [isOpen, selectedCodes]);
 

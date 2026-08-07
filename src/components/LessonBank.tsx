@@ -24,7 +24,7 @@ interface LessonBankProps {
 }
 
 export const LessonBank: React.FC<LessonBankProps> = ({
-  lessons,
+  lessons = [],
   onSaveLesson,
   onDeleteLesson,
   onToggleFavorite,
@@ -45,13 +45,18 @@ export const LessonBank: React.FC<LessonBankProps> = ({
   const [games, setGames] = useState('');
   const [notes, setNotes] = useState('');
 
+  const safeLessons = Array.isArray(lessons) ? lessons : [];
+
   const filteredLessons = useMemo(() => {
-    return lessons.filter((l) => 
-      l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.theme.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [lessons, searchTerm]);
+    return safeLessons.filter((l) => {
+      if (!l) return false;
+      return (
+        (l.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (l.subject || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (l.theme || '').toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [safeLessons, searchTerm]);
 
   const openModal = (lesson?: SavedLesson) => {
     if (lesson) {

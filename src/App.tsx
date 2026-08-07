@@ -11,7 +11,9 @@ import {
   deleteDoc, 
   query, 
   where,
-  User 
+  User,
+  handleFirestoreError,
+  OperationType
 } from './lib/firebase';
 import { 
   WeeklyPlanning, 
@@ -228,7 +230,7 @@ export default function App() {
         }, { merge: true });
         alert("Planejamento salvo com sucesso no Firebase!");
       } catch (err: any) {
-        console.error("Erro ao salvar no Firestore:", err);
+        handleFirestoreError(err, OperationType.WRITE, `plannings/${planningToSave.id}`);
         alert("Planejamento salvo localmente no aplicativo!");
       }
     } else {
@@ -252,7 +254,7 @@ export default function App() {
 
   // Delete Planning
   const handleDeletePlanning = async (id: string) => {
-    const updated = plannings.filter(p => p.id !== id);
+    const updated = (plannings || []).filter(p => p && p.id !== id);
     setPlannings(updated);
 
     if (currentPlanning?.id === id) {
@@ -267,7 +269,7 @@ export default function App() {
       try {
         await deleteDoc(doc(db, 'plannings', id));
       } catch (e) {
-        console.error("Erro ao deletar do Firestore:", e);
+        handleFirestoreError(e, OperationType.DELETE, `plannings/${id}`);
       }
     }
   };
@@ -419,58 +421,63 @@ export default function App() {
 
         {activeTab === 'banco-aulas' && (
           <LessonBank
-            lessons={lessons}
+            lessons={lessons || []}
             onSaveLesson={(l) => {
-              const exists = lessons.some(x => x.id === l.id);
-              setLessons(exists ? lessons.map(x => x.id === l.id ? l : x) : [l, ...lessons]);
+              const currentList = lessons || [];
+              const exists = currentList.some(x => x && x.id === l.id);
+              setLessons(exists ? currentList.map(x => x && x.id === l.id ? l : x) : [l, ...currentList]);
             }}
-            onDeleteLesson={(id) => setLessons(lessons.filter(l => l.id !== id))}
-            onToggleFavorite={(id) => setLessons(lessons.map(l => l.id === id ? { ...l, isFavorite: !l.isFavorite } : l))}
+            onDeleteLesson={(id) => setLessons((lessons || []).filter(l => l && l.id !== id))}
+            onToggleFavorite={(id) => setLessons((lessons || []).map(l => l && l.id === id ? { ...l, isFavorite: !l.isFavorite } : l))}
           />
         )}
 
         {activeTab === 'banco-historias' && (
           <StoryBank
-            stories={stories}
+            stories={stories || []}
             onSaveStory={(s) => {
-              const exists = stories.some(x => x.id === s.id);
-              setStories(exists ? stories.map(x => x.id === s.id ? s : x) : [s, ...stories]);
+              const currentList = stories || [];
+              const exists = currentList.some(x => x && x.id === s.id);
+              setStories(exists ? currentList.map(x => x && x.id === s.id ? s : x) : [s, ...currentList]);
             }}
-            onDeleteStory={(id) => setStories(stories.filter(s => s.id !== id))}
+            onDeleteStory={(id) => setStories((stories || []).filter(s => s && s.id !== id))}
           />
         )}
 
         {activeTab === 'banco-musicas' && (
           <SongBank
-            songs={songs}
+            songs={songs || []}
             onSaveSong={(s) => {
-              const exists = songs.some(x => x.id === s.id);
-              setSongs(exists ? songs.map(x => x.id === s.id ? s : x) : [s, ...songs]);
+              const currentList = songs || [];
+              const exists = currentList.some(x => x && x.id === s.id);
+              setSongs(exists ? currentList.map(x => x && x.id === s.id ? s : x) : [s, ...currentList]);
             }}
-            onDeleteSong={(id) => setSongs(songs.filter(s => s.id !== id))}
+            onDeleteSong={(id) => setSongs((songs || []).filter(s => s && s.id !== id))}
           />
         )}
 
         {activeTab === 'banco-brincadeiras' && (
           <GameBank
-            games={games}
+            games={games || []}
             onSaveGame={(g) => {
-              const exists = games.some(x => x.id === g.id);
-              setGames(exists ? games.map(x => x.id === g.id ? g : x) : [g, ...games]);
+              const currentList = games || [];
+              const exists = currentList.some(x => x && x.id === g.id);
+              setGames(exists ? currentList.map(x => x && x.id === g.id ? g : x) : [g, ...currentList]);
             }}
-            onDeleteGame={(id) => setGames(games.filter(g => g.id !== id))}
+            onDeleteGame={(id) => setGames((games || []).filter(g => g && g.id !== id))}
           />
         )}
 
         {(activeTab === 'banco-materiais' || activeTab === 'banco-biblico') && (
           <BibleBank
-            bibleLessons={bibleLessons}
+            bibleLessons={bibleLessons || []}
             onSaveBibleLesson={(bLesson) => {
-              const exists = bibleLessons.some(x => x.id === bLesson.id);
-              setBibleLessons(exists ? bibleLessons.map(x => x.id === bLesson.id ? bLesson : x) : [bLesson, ...bibleLessons]);
+              const currentList = bibleLessons || [];
+              const exists = currentList.some(x => x && x.id === bLesson.id);
+              setBibleLessons(exists ? currentList.map(x => x && x.id === bLesson.id ? bLesson : x) : [bLesson, ...currentList]);
             }}
-            onDeleteBibleLesson={(id) => setBibleLessons(bibleLessons.filter(x => x.id !== id))}
-            onToggleFavorite={(id) => setBibleLessons(bibleLessons.map(x => x.id === id ? { ...x, isFavorite: !x.isFavorite } : x))}
+            onDeleteBibleLesson={(id) => setBibleLessons((bibleLessons || []).filter(x => x && x.id !== id))}
+            onToggleFavorite={(id) => setBibleLessons((bibleLessons || []).map(x => x && x.id === id ? { ...x, isFavorite: !x.isFavorite } : x))}
           />
         )}
 

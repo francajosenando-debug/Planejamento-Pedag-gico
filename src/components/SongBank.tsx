@@ -8,7 +8,7 @@ interface SongBankProps {
   onDeleteSong: (id: string) => void;
 }
 
-export const SongBank: React.FC<SongBankProps> = ({ songs, onSaveSong, onDeleteSong }) => {
+export const SongBank: React.FC<SongBankProps> = ({ songs = [], onSaveSong, onDeleteSong }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSong, setEditingSong] = useState<Song | null>(null);
@@ -19,9 +19,13 @@ export const SongBank: React.FC<SongBankProps> = ({ songs, onSaveSong, onDeleteS
   const [objective, setObjective] = useState('');
   const [notes, setNotes] = useState('');
 
-  const filtered = songs.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (s.author && s.author.toLowerCase().includes(searchTerm.toLowerCase()))
+  const safeSongs = Array.isArray(songs) ? songs : [];
+
+  const filtered = safeSongs.filter(s => 
+    s && (
+      (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.author && s.author.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
   );
 
   const openModal = (song?: Song) => {

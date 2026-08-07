@@ -13,7 +13,7 @@ interface BibleLessonSelectorModalProps {
 export const BibleLessonSelectorModal: React.FC<BibleLessonSelectorModalProps> = ({
   isOpen,
   onClose,
-  bibleLessons,
+  bibleLessons = [],
   onSelectBibleLesson,
   targetTitle = 'Aula Bíblica / Devocional'
 }) => {
@@ -21,10 +21,13 @@ export const BibleLessonSelectorModal: React.FC<BibleLessonSelectorModalProps> =
 
   if (!isOpen) return null;
 
-  const filteredLessons = bibleLessons.filter((lesson) => {
+  const safeBibleLessons = Array.isArray(bibleLessons) ? bibleLessons : [];
+
+  const filteredLessons = safeBibleLessons.filter((lesson) => {
+    if (!lesson) return false;
     const term = searchTerm.toLowerCase();
     return (
-      lesson.title.toLowerCase().includes(term) ||
+      (lesson.title || '').toLowerCase().includes(term) ||
       (lesson.passage && lesson.passage.toLowerCase().includes(term)) ||
       (lesson.principle && lesson.principle.toLowerCase().includes(term)) ||
       (lesson.keyVerse && lesson.keyVerse.toLowerCase().includes(term)) ||

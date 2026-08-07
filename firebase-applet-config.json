@@ -3,7 +3,7 @@
   "appId": "1:154203738143:web:138ca6ccbb7ceb690a052a",
   "apiKey": "AIzaSyC_ioF-kwV2tExkruxJs84c-GKhyPbli4M",
   "authDomain": "planejamento-pedagogico-f530d.firebaseapp.com",
-  "firestoreDatabaseId": "",
+  "firestoreDatabaseId": "(default)",
   "storageBucket": "planejamento-pedagogico-f530d.firebasestorage.app",
   "messagingSenderId": "154203738143",
   "measurementId": "",

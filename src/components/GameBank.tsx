@@ -8,7 +8,7 @@ interface GameBankProps {
   onDeleteGame: (id: string) => void;
 }
 
-export const GameBank: React.FC<GameBankProps> = ({ games, onSaveGame, onDeleteGame }) => {
+export const GameBank: React.FC<GameBankProps> = ({ games = [], onSaveGame, onDeleteGame }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
@@ -20,9 +20,13 @@ export const GameBank: React.FC<GameBankProps> = ({ games, onSaveGame, onDeleteG
   const [objectives, setObjectives] = useState('');
   const [ageRange, setAgeRange] = useState('4 a 5 anos');
 
-  const filtered = games.filter(g => 
-    g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    g.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const safeGames = Array.isArray(games) ? games : [];
+
+  const filtered = safeGames.filter(g => 
+    g && (
+      (g.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (g.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const openModal = (game?: Game) => {

@@ -102,10 +102,13 @@ export const BibleBank: React.FC<BibleBankProps> = ({
     resetForm();
   };
 
-  const filtered = bibleLessons.filter((b) => {
+  const safeBibleLessons = Array.isArray(bibleLessons) ? bibleLessons : [];
+
+  const filtered = safeBibleLessons.filter((b) => {
+    if (!b) return false;
     const term = searchTerm.toLowerCase();
     const matchesSearch = 
-      b.title.toLowerCase().includes(term) ||
+      (b.title || '').toLowerCase().includes(term) ||
       (b.passage && b.passage.toLowerCase().includes(term)) ||
       (b.principle && b.principle.toLowerCase().includes(term)) ||
       (b.keyVerse && b.keyVerse.toLowerCase().includes(term)) ||

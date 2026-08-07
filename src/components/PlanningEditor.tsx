@@ -49,7 +49,6 @@ import { BibleLessonSelectorModal } from './BibleLessonSelectorModal';
 import { generatePlanningPDF } from '../lib/pdfExport';
 import { generatePlanningDOCX } from '../lib/docxExport';
 import { DEFAULT_MATERIALS } from '../data/materialsData';
-import { DEFAULT_ROUTINE_PRESETS, RoutinePreset } from '../data/routinePresetsData';
 
 interface PlanningEditorProps {
   currentPlanning: WeeklyPlanning;
@@ -115,58 +114,6 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   const [importSearchTerm, setImportSearchTerm] = useState<string>('');
   const [importSubjectFilter, setImportSubjectFilter] = useState<string>('todos');
   const [importPreviewLesson, setImportPreviewLesson] = useState<SavedLesson | null>(null);
-
-  // Preset Descriptions State (persisted in localStorage)
-  const [routinePresets, setRoutinePresets] = useState<RoutinePreset[]>(() => {
-    try {
-      const saved = localStorage.getItem('ccc_routine_presets');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return DEFAULT_ROUTINE_PRESETS;
-  });
-
-  const [presetModalOpen, setPresetModalOpen] = useState(false);
-  const [newPresetTitle, setNewPresetTitle] = useState('');
-  const [newPresetCategory, setNewPresetCategory] = useState('Geral');
-  const [newPresetDesc, setNewPresetDesc] = useState('');
-
-  const handleSaveCustomPreset = () => {
-    if (!newPresetTitle.trim() || !newPresetDesc.trim()) {
-      alert('Por favor, preencha o título e a descrição da rotina.');
-      return;
-    }
-    const newPreset: RoutinePreset = {
-      id: `preset-custom-${Date.now()}`,
-      category: newPresetCategory.trim() || 'Geral',
-      title: newPresetTitle.trim(),
-      description: newPresetDesc.trim()
-    };
-    const updated = [newPreset, ...routinePresets];
-    setRoutinePresets(updated);
-    try {
-      localStorage.setItem('ccc_routine_presets', JSON.stringify(updated));
-    } catch (e) {
-      console.error(e);
-    }
-    setNewPresetTitle('');
-    setNewPresetCategory('Geral');
-    setNewPresetDesc('');
-    setPresetModalOpen(false);
-    setToastMessage('Descrição pré-configurada salva com sucesso!');
-    setTimeout(() => setToastMessage(''), 3500);
-  };
-
-  const handleDeletePreset = (id: string) => {
-    const updated = routinePresets.filter(p => p.id !== id);
-    setRoutinePresets(updated);
-    try {
-      localStorage.setItem('ccc_routine_presets', JSON.stringify(updated));
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   // Block AI Assistant States
   const [generatingRoutineId, setGeneratingRoutineId] = useState<string | null>(null);
@@ -536,14 +483,16 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   };
 
   const handleUpdateRoutine = (id: string, field: keyof RoutineItem, value: any) => {
-    const updated = currentDay.routine.map(item => item.id === id ? { ...item, [field]: value } : item);
+    const routineList = currentDay.routine || [];
+    const updated = routineList.map(item => item.id === id ? { ...item, [field]: value } : item);
     updateDayField({ ...currentDay, routine: updated });
   };
 
   const handleDeleteRoutine = (id: string) => {
+    const routineList = currentDay.routine || [];
     updateDayField({
       ...currentDay,
-      routine: currentDay.routine.filter(item => item.id !== id)
+      routine: routineList.filter(item => item.id !== id)
     });
   };
 
@@ -553,14 +502,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
       id: `r-${Date.now()}`,
       title: `${item.title} (Cópia)`
     };
+    const routineList = currentDay.routine || [];
     updateDayField({
       ...currentDay,
-      routine: [...currentDay.routine, duplicated]
+      routine: [...routineList, duplicated]
     });
   };
 
   const handleMoveRoutine = (index: number, direction: 'up' | 'down') => {
-    const newRoutine = [...currentDay.routine];
+    const newRoutine = [...(currentDay.routine || [])];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newRoutine.length) return;
 
@@ -584,21 +534,24 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
       materials: ['Cartolina', 'Lápis de cor'],
       notes: ''
     };
+    const lessonsList = currentDay.lessons || [];
     updateDayField({
       ...currentDay,
-      lessons: [...currentDay.lessons, newLesson]
+      lessons: [...lessonsList, newLesson]
     });
   };
 
   const handleUpdateLesson = (id: string, field: keyof Lesson, value: any) => {
-    const updated = currentDay.lessons.map(l => l.id === id ? { ...l, [field]: value } : l);
+    const lessonsList = currentDay.lessons || [];
+    const updated = lessonsList.map(l => l.id === id ? { ...l, [field]: value } : l);
     updateDayField({ ...currentDay, lessons: updated });
   };
 
   const handleDeleteLesson = (id: string) => {
+    const lessonsList = currentDay.lessons || [];
     updateDayField({
       ...currentDay,
-      lessons: currentDay.lessons.filter(l => l.id !== id)
+      lessons: lessonsList.filter(l => l.id !== id)
     });
   };
 
@@ -653,8 +606,8 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
     <div className="space-y-6 pb-16 animate-in fade-in duration-300">
       
       {/* Top Action Bar - Fixed to Top & Adjusted Full Width */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-md -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-6 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-full overflow-hidden">
-        <div className="flex items-center gap-2.5">
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-md -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3.5 mb-6 transition-all flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           {onClose && (
             <button
               id="planning-close-btn"
@@ -666,11 +619,11 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             </button>
           )}
 
-          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 flex items-center justify-center font-bold shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 flex items-center justify-center font-bold">
             <BookOpen className="w-5 h-5" />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
+          <div>
+            <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
               {currentPlanning.className || 'Nova Turma'} – {currentPlanning.week || 'Semana'}
             </h1>
             <div className="text-xs flex items-center gap-2 mt-0.5">
@@ -689,15 +642,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto">
+        <div className="flex items-center flex-wrap gap-2">
           {/* Visualizar Impressão */}
           <button
             id="planning-preview-btn"
             onClick={() => setPreviewModalOpen(true)}
-            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
+            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <Eye className="w-4 h-4" />
-            <span className="text-[11px] sm:text-xs">Visualizar Impressão</span>
+            <span>Visualizar Impressão</span>
           </button>
 
           {/* Export PDF */}
@@ -705,10 +658,10 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             id="planning-export-pdf-btn"
             onClick={handleExportPdf}
             disabled={isGeneratingPdf}
-            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
+            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <FileDown className="w-4 h-4" />
-            <span className="text-[11px] sm:text-xs">{isGeneratingPdf ? 'Gerando...' : 'Gerar PDF'}</span>
+            <span>{isGeneratingPdf ? 'Gerando PDF...' : 'Gerar PDF'}</span>
           </button>
 
           {/* Export DOCX */}
@@ -716,20 +669,20 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             id="planning-export-docx-btn"
             onClick={handleExportDocx}
             disabled={isGeneratingDocx}
-            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
+            className="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
           >
             <FileText className="w-4 h-4" />
-            <span className="text-[11px] sm:text-xs">{isGeneratingDocx ? 'Gerando...' : 'Gerar Word'}</span>
+            <span>{isGeneratingDocx ? 'Gerando Word...' : 'Gerar Word (DOCX)'}</span>
           </button>
 
           {/* Save Button */}
           <button
             id="planning-save-firebase-btn"
             onClick={handleSave}
-            className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all whitespace-nowrap"
+            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all"
           >
             <Save className="w-4 h-4" />
-            <span className="text-[11px] sm:text-xs">Salvar</span>
+            <span>Salvar Planejamento</span>
           </button>
 
           {/* Close/Exit Button */}
@@ -737,11 +690,11 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             <button
               id="planning-exit-btn"
               onClick={handleCloseEditor}
-              className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors shrink-0"
+              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-colors"
               title="Fechar Edição"
             >
               <X className="w-4 h-4" />
-              <span className="text-[11px] sm:text-xs">Fechar</span>
+              <span>Fechar</span>
             </button>
           )}
         </div>
@@ -945,18 +898,16 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                     key={item.id}
                     className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2 relative group"
                   >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <input
-                            id={`routine-time-${item.id}`}
-                            type="text"
-                            value={item.time}
-                            onChange={(e) => handleUpdateRoutine(item.id, 'time', e.target.value)}
-                            placeholder="13:00 – 13:20"
-                            className="w-28 sm:w-32 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 shrink-0"
-                          />
-                        </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <input
+                          id={`routine-time-${item.id}`}
+                          type="text"
+                          value={item.time}
+                          onChange={(e) => handleUpdateRoutine(item.id, 'time', e.target.value)}
+                          placeholder="13:00 – 13:20"
+                          className="w-32 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300"
+                        />
 
                         <input
                           id={`routine-title-${item.id}`}
@@ -964,49 +915,47 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           value={item.title}
                           onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
                           placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
-                          className="flex-1 min-w-0 w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                          className="flex-1 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                         />
 
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
-                            <button
-                              type="button"
-                              onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
-                              className="px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1 border border-amber-500/30 transition-colors shrink-0"
-                              title="Selecionar uma história do Banco de Histórias"
-                            >
-                              <BookMarked className="w-3.5 h-3.5 text-amber-500" />
-                              <span>Escolher História</span>
-                            </button>
-                          )}
-
-                          {/b(í|i)bli|devocional|religi/i.test(item.title) && (
-                            <button
-                              type="button"
-                              onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
-                              className="px-2 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1 border border-indigo-500/30 transition-colors shrink-0"
-                              title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
-                            >
-                              <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
-                              <span>Escolher Aula Bíblica</span>
-                            </button>
-                          )}
-
+                        {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
                           <button
                             type="button"
-                            onClick={() => handleGenerateRoutineWithAi(item)}
-                            disabled={generatingRoutineId === item.id}
-                            className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all shrink-0 disabled:opacity-50"
-                            title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
+                            onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
+                            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1 border border-amber-500/30 transition-colors flex-shrink-0"
+                            title="Selecionar uma história do Banco de Histórias"
                           >
-                            <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                            <span>{generatingRoutineId === item.id ? 'Gerando...' : 'Gerar c/ IA'}</span>
+                            <BookMarked className="w-3.5 h-3.5 text-amber-500" />
+                            <span>Escolher História</span>
                           </button>
-                        </div>
+                        )}
+
+                        {/b(í|i)bli|devocional|religi/i.test(item.title) && (
+                          <button
+                            type="button"
+                            onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1 border border-indigo-500/30 transition-colors flex-shrink-0"
+                            title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                          >
+                            <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
+                            <span>Escolher Aula Bíblica</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateRoutineWithAi(item)}
+                          disabled={generatingRoutineId === item.id}
+                          className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all flex-shrink-0 disabled:opacity-50"
+                          title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                          <span>{generatingRoutineId === item.id ? 'Gerando...' : 'Gerar c/ IA'}</span>
+                        </button>
                       </div>
 
                       {/* Reordering & Action Controls */}
-                      <div className="flex items-center justify-end gap-1 text-slate-400 shrink-0 self-end md:self-center pt-1 md:pt-0 border-t md:border-t-0 border-slate-200/50 dark:border-slate-700/50 w-full md:w-auto">
+                      <div className="flex items-center gap-1 text-slate-400">
                         <button
                           type="button"
                           onClick={() => handleMoveRoutine(idx, 'up')}
@@ -1046,64 +995,14 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                          Descrição / Atividades da Rotina
-                        </label>
-
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {/* Preset selector dropdown */}
-                          <select
-                            defaultValue=""
-                            onChange={(e) => {
-                              const selectedId = e.target.value;
-                              if (!selectedId) return;
-                              const found = routinePresets.find(p => p.id === selectedId);
-                              if (found) {
-                                handleUpdateRoutine(item.id, 'description', found.description);
-                                if (found.title) {
-                                  handleUpdateRoutine(item.id, 'title', found.title);
-                                }
-                              }
-                              e.target.value = "";
-                            }}
-                            className="max-w-full sm:max-w-xs px-2 py-0.5 text-[11px] font-semibold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 outline-none hover:border-blue-500 truncate"
-                          >
-                            <option value="" disabled>📋 Inserir Modelo Pronto...</option>
-                            {routinePresets.map((preset) => (
-                              <option key={preset.id} value={preset.id}>
-                                [{preset.category}] {preset.title}
-                              </option>
-                            ))}
-                          </select>
-
-                          {/* Add custom preset button */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNewPresetTitle(item.title || '');
-                              setNewPresetDesc(item.description || '');
-                              setPresetModalOpen(true);
-                            }}
-                            className="px-2 py-0.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-colors shrink-0"
-                            title="Salvar esta rotina como um modelo pré-configurado"
-                          >
-                            <Plus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            <span>Novo Modelo</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      <textarea
-                        id={`routine-desc-${item.id}`}
-                        value={item.description}
-                        onChange={(e) => handleUpdateRoutine(item.id, 'description', e.target.value)}
-                        placeholder="- Higienização: Banheiro e água&#10;- Chamada e calendário&#10;- Devocional"
-                        rows={2}
-                        className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
+                    <textarea
+                      id={`routine-desc-${item.id}`}
+                      value={item.description}
+                      onChange={(e) => handleUpdateRoutine(item.id, 'description', e.target.value)}
+                      placeholder="- Higienização: Banheiro e água&#10;- Chamada e calendário&#10;- Devocional"
+                      rows={2}
+                      className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 outline-none"
+                    />
 
                     {/* Image Upload for Routine */}
                     <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
@@ -1310,7 +1209,7 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                                 {code}
                                 <button
                                   type="button"
-                                  onClick={() => handleUpdateLesson(lesson.id, 'bnccCodes', lesson.bnccCodes.filter(c => c !== code))}
+                                  onClick={() => handleUpdateLesson(lesson.id, 'bnccCodes', (lesson.bnccCodes || []).filter(c => c !== code))}
                                   className="hover:text-red-600"
                                 >
                                   ×
@@ -1522,7 +1421,9 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
               ) : (
                 /* List of Saved Lessons */
                 (() => {
-                  const filtered = savedLessons.filter((l) => {
+                  const safeSavedLessons = Array.isArray(savedLessons) ? savedLessons : [];
+                  const filtered = safeSavedLessons.filter((l) => {
+                    if (!l) return false;
                     const matchesSubject = importSubjectFilter === 'todos' || l.subject === importSubjectFilter;
                     const matchesSearch = !importSearchTerm.trim() || 
                       l.name?.toLowerCase().includes(importSearchTerm.toLowerCase()) ||
@@ -1714,125 +1615,10 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
       <BibleLessonSelectorModal
         isOpen={!!bibleSelectorTarget}
         onClose={() => setBibleSelectorTarget(null)}
-        bibleLessons={bibleLessons}
-        onSelectBibleLesson={handleSelectBibleLessonForTarget}
+        lessons={bibleLessons}
+        onSelectLesson={handleSelectBibleLessonForTarget}
         targetTitle={bibleSelectorTarget?.targetTitle}
       />
-
-      {/* Custom Preset Creation Modal */}
-      {presetModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                  <Plus className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Criar Nova Descrição Pronta</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Cadastre um modelo para reaproveitar em qualquer planejamento</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setPresetModalOpen(false)}
-                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Título da Rotina / Descrição
-                </label>
-                <input
-                  type="text"
-                  value={newPresetTitle}
-                  onChange={(e) => setNewPresetTitle(e.target.value)}
-                  placeholder="Ex: Acolhida com Música e Oração"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Categoria
-                </label>
-                <input
-                  type="text"
-                  value={newPresetCategory}
-                  onChange={(e) => setNewPresetCategory(e.target.value)}
-                  placeholder="Ex: Acolhida, Higiene, Recreação, etc."
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Conteúdo da Descrição (Atividades)
-                </label>
-                <textarea
-                  value={newPresetDesc}
-                  onChange={(e) => setNewPresetDesc(e.target.value)}
-                  rows={4}
-                  placeholder="- Item 1&#10;- Item 2&#10;- Item 3"
-                  className="w-full p-3 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-            </div>
-
-            {/* List of existing custom presets */}
-            {routinePresets.length > 0 && (
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2">
-                  Descrições Cadastradas ({routinePresets.length}):
-                </p>
-                <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1">
-                  {routinePresets.map((preset) => (
-                    <div
-                      key={preset.id}
-                      className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-between text-xs gap-2"
-                    >
-                      <div className="truncate">
-                        <span className="font-bold text-slate-800 dark:text-slate-200">[{preset.category}] {preset.title}</span>
-                      </div>
-                      {preset.id.startsWith('preset-custom-') && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePreset(preset.id)}
-                          className="text-red-500 hover:text-red-700 p-1"
-                          title="Excluir modelo"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setPresetModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveCustomPreset}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Salvar Descrição Pronta</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Unsaved Changes Confirmation Modal */}
       {unsavedModalOpen && (

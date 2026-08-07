@@ -9,7 +9,7 @@ interface StoryBankProps {
   onDeleteStory: (id: string) => void;
 }
 
-export const StoryBank: React.FC<StoryBankProps> = ({ stories, onSaveStory, onDeleteStory }) => {
+export const StoryBank: React.FC<StoryBankProps> = ({ stories = [], onSaveStory, onDeleteStory }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStory, setEditingStory] = useState<Story | null>(null);
@@ -21,9 +21,13 @@ export const StoryBank: React.FC<StoryBankProps> = ({ stories, onSaveStory, onDe
   const [ageRange, setAgeRange] = useState('3 a 5 anos');
   const [imageUrl, setImageUrl] = useState('');
 
-  const filtered = stories.filter(s => 
-    s.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.author.toLowerCase().includes(searchTerm.toLowerCase())
+  const safeStories = Array.isArray(stories) ? stories : [];
+
+  const filtered = safeStories.filter(s => 
+    s && (
+      (s.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (s.author || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const openModal = (story?: Story) => {

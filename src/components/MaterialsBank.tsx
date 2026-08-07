@@ -9,9 +9,13 @@ export const MaterialsBank: React.FC = () => {
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState('Geral');
 
-  const filtered = materials.filter(m => 
-    m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const safeMaterials = Array.isArray(materials) ? materials : [];
+
+  const filtered = safeMaterials.filter(m => 
+    m && (
+      (m.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (m.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const handleAdd = (e: React.FormEvent) => {
@@ -23,12 +27,12 @@ export const MaterialsBank: React.FC = () => {
       name: newName,
       category: newCategory
     };
-    setMaterials([...materials, newItem]);
+    setMaterials([...safeMaterials, newItem]);
     setNewName('');
   };
 
   const handleDelete = (id: string) => {
-    setMaterials(materials.filter(m => m.id !== id));
+    setMaterials(safeMaterials.filter(m => m && m.id !== id));
   };
 
   return (

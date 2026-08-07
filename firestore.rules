@@ -7,10 +7,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
     // Users
     match /users/{userId} {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
@@ -18,32 +14,32 @@ service cloud.firestore {
 
     // Settings
     match /settings/{settingId} {
-      allow read, create, update, delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     // Plannings
     match /plannings/{planningId} {
-      allow read, create, update, delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     // Lessons
     match /lessons/{lessonId} {
-      allow read, create, update, delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     // Stories
     match /stories/{storyId} {
-      allow read, create, update, delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     // Songs
     match /songs/{songId} {
-      allow read, create, update, delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     // Games
     match /games/{gameId} {
-      allow read, create, update, delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
+      allow read, write: if isAuthenticated();
     }
 
     // Materials
@@ -58,3 +54,4 @@ service cloud.firestore {
     }
   }
 }
+

@@ -147,7 +147,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleRemove = (indexToRemove: number) => {
     if (multiple && onImagesChange) {
-      const updated = images.filter((_, idx) => idx !== indexToRemove);
+      const safeImages = Array.isArray(images) ? images : [];
+      const updated = safeImages.filter((_, idx) => idx !== indexToRemove);
       onImagesChange(updated);
     } else if (onImageUrlChange) {
       onImageUrlChange('');

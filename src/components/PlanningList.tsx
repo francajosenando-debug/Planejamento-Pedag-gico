@@ -28,7 +28,7 @@ interface PlanningListProps {
 }
 
 export const PlanningList: React.FC<PlanningListProps> = ({
-  plannings,
+  plannings = [],
   onSelectPlanning,
   onDuplicatePlanning,
   onDeletePlanning,
@@ -41,30 +41,33 @@ export const PlanningList: React.FC<PlanningListProps> = ({
   const [previewPlanning, setPreviewPlanning] = useState<WeeklyPlanning | null>(null);
   const [planningToDelete, setPlanningToDelete] = useState<WeeklyPlanning | null>(null);
 
+  const safePlannings = Array.isArray(plannings) ? plannings : [];
+
   const yearsOptions = useMemo(() => {
-    const years = Array.from(new Set(plannings.map(p => p.year).filter(Boolean)));
+    const years = Array.from(new Set(safePlannings.map(p => p?.year).filter(Boolean)));
     return ['ALL', ...years];
-  }, [plannings]);
+  }, [safePlannings]);
 
   const classOptions = useMemo(() => {
-    const classes = Array.from(new Set(plannings.map(p => p.className).filter(Boolean)));
+    const classes = Array.from(new Set(safePlannings.map(p => p?.className).filter(Boolean)));
     return ['ALL', ...classes];
-  }, [plannings]);
+  }, [safePlannings]);
 
   const filteredPlannings = useMemo(() => {
-    return plannings.filter((p) => {
+    return safePlannings.filter((p) => {
+      if (!p) return false;
       const matchSearch = 
-        p.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.week.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.generalTheme?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.teacher.toLowerCase().includes(searchTerm.toLowerCase());
+        (p.className || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.week || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.generalTheme || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.teacher || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchYear = yearFilter === 'ALL' || p.year === yearFilter;
       const matchClass = classFilter === 'ALL' || p.className === classFilter;
 
       return matchSearch && matchYear && matchClass;
     });
-  }, [plannings, searchTerm, yearFilter, classFilter]);
+  }, [safePlannings, searchTerm, yearFilter, classFilter]);
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-300">

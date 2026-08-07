@@ -28,16 +28,16 @@ export const PlanningPreviewModal: React.FC<PlanningPreviewModalProps> = ({
   if (!isOpen) return null;
 
   const schoolName = settings?.schoolName || 'Escola de Educação Infantil';
-  const teacherName = planning.teacher || settings?.teacherName || 'Professor(a)';
+  const teacherName = planning?.teacher || settings?.teacherName || 'Professor(a)';
   const cityState = (settings?.city && settings?.state) ? `${settings.city} - ${settings.state}` : '';
 
-  const daysList = [
+  const daysList = planning?.days ? [
     planning.days.segunda,
     planning.days.terca,
     planning.days.quarta,
     planning.days.quinta,
     planning.days.sexta,
-  ].filter(Boolean);
+  ].filter(Boolean) : [];
 
   const handlePrint = () => {
     if (!printRef.current) return;
