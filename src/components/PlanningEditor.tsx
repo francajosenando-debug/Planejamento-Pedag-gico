@@ -653,8 +653,8 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
     <div className="space-y-6 pb-16 animate-in fade-in duration-300">
       
       {/* Top Action Bar - Fixed to Top & Adjusted Full Width */}
-      <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-md -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3.5 mb-6 transition-all flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-md -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-6 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-full overflow-hidden">
+        <div className="flex items-center gap-2.5">
           {onClose && (
             <button
               id="planning-close-btn"
@@ -666,11 +666,11 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             </button>
           )}
 
-          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 flex items-center justify-center font-bold">
+          <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 flex items-center justify-center font-bold shrink-0">
             <BookOpen className="w-5 h-5" />
           </div>
-          <div>
-            <h1 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight truncate">
               {currentPlanning.className || 'Nova Turma'} – {currentPlanning.week || 'Semana'}
             </h1>
             <div className="text-xs flex items-center gap-2 mt-0.5">
@@ -689,15 +689,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center flex-wrap gap-2">
+        <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto">
           {/* Visualizar Impressão */}
           <button
             id="planning-preview-btn"
             onClick={() => setPreviewModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
           >
             <Eye className="w-4 h-4" />
-            <span>Visualizar Impressão</span>
+            <span className="text-[11px] sm:text-xs">Visualizar Impressão</span>
           </button>
 
           {/* Export PDF */}
@@ -705,10 +705,10 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             id="planning-export-pdf-btn"
             onClick={handleExportPdf}
             disabled={isGeneratingPdf}
-            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
           >
             <FileDown className="w-4 h-4" />
-            <span>{isGeneratingPdf ? 'Gerando PDF...' : 'Gerar PDF'}</span>
+            <span className="text-[11px] sm:text-xs">{isGeneratingPdf ? 'Gerando...' : 'Gerar PDF'}</span>
           </button>
 
           {/* Export DOCX */}
@@ -716,20 +716,20 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             id="planning-export-docx-btn"
             onClick={handleExportDocx}
             disabled={isGeneratingDocx}
-            className="px-3.5 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-semibold text-xs flex items-center gap-1.5 shadow-sm transition-colors"
+            className="flex-1 sm:flex-none px-3 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-50 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors whitespace-nowrap"
           >
             <FileText className="w-4 h-4" />
-            <span>{isGeneratingDocx ? 'Gerando Word...' : 'Gerar Word (DOCX)'}</span>
+            <span className="text-[11px] sm:text-xs">{isGeneratingDocx ? 'Gerando...' : 'Gerar Word'}</span>
           </button>
 
           {/* Save Button */}
           <button
             id="planning-save-firebase-btn"
             onClick={handleSave}
-            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all"
+            className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all whitespace-nowrap"
           >
             <Save className="w-4 h-4" />
-            <span>Salvar Planejamento</span>
+            <span className="text-[11px] sm:text-xs">Salvar</span>
           </button>
 
           {/* Close/Exit Button */}
@@ -737,11 +737,11 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
             <button
               id="planning-exit-btn"
               onClick={handleCloseEditor}
-              className="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+              className="px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors shrink-0"
               title="Fechar Edição"
             >
               <X className="w-4 h-4" />
-              <span>Fechar</span>
+              <span className="text-[11px] sm:text-xs">Fechar</span>
             </button>
           )}
         </div>
@@ -945,16 +945,18 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                     key={item.id}
                     className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2 relative group"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-1">
-                        <input
-                          id={`routine-time-${item.id}`}
-                          type="text"
-                          value={item.time}
-                          onChange={(e) => handleUpdateRoutine(item.id, 'time', e.target.value)}
-                          placeholder="13:00 – 13:20"
-                          className="w-32 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300"
-                        />
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <input
+                            id={`routine-time-${item.id}`}
+                            type="text"
+                            value={item.time}
+                            onChange={(e) => handleUpdateRoutine(item.id, 'time', e.target.value)}
+                            placeholder="13:00 – 13:20"
+                            className="w-28 sm:w-32 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 shrink-0"
+                          />
+                        </div>
 
                         <input
                           id={`routine-title-${item.id}`}
@@ -962,47 +964,49 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           value={item.title}
                           onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
                           placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
-                          className="flex-1 px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                          className="flex-1 min-w-0 w-full px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                         />
 
-                        {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                            <button
+                              type="button"
+                              onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
+                              className="px-2 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1 border border-amber-500/30 transition-colors shrink-0"
+                              title="Selecionar uma história do Banco de Histórias"
+                            >
+                              <BookMarked className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Escolher História</span>
+                            </button>
+                          )}
+
+                          {/b(í|i)bli|devocional|religi/i.test(item.title) && (
+                            <button
+                              type="button"
+                              onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
+                              className="px-2 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1 border border-indigo-500/30 transition-colors shrink-0"
+                              title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                            >
+                              <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
+                              <span>Escolher Aula Bíblica</span>
+                            </button>
+                          )}
+
                           <button
                             type="button"
-                            onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
-                            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1 border border-amber-500/30 transition-colors flex-shrink-0"
-                            title="Selecionar uma história do Banco de Histórias"
+                            onClick={() => handleGenerateRoutineWithAi(item)}
+                            disabled={generatingRoutineId === item.id}
+                            className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all shrink-0 disabled:opacity-50"
+                            title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
                           >
-                            <BookMarked className="w-3.5 h-3.5 text-amber-500" />
-                            <span>Escolher História</span>
+                            <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                            <span>{generatingRoutineId === item.id ? 'Gerando...' : 'Gerar c/ IA'}</span>
                           </button>
-                        )}
-
-                        {/b(í|i)bli|devocional|religi/i.test(item.title) && (
-                          <button
-                            type="button"
-                            onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1 border border-indigo-500/30 transition-colors flex-shrink-0"
-                            title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
-                          >
-                            <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
-                            <span>Escolher Aula Bíblica</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateRoutineWithAi(item)}
-                          disabled={generatingRoutineId === item.id}
-                          className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-sm transition-all flex-shrink-0 disabled:opacity-50"
-                          title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                          <span>{generatingRoutineId === item.id ? 'Gerando...' : 'Gerar c/ IA'}</span>
-                        </button>
+                        </div>
                       </div>
 
                       {/* Reordering & Action Controls */}
-                      <div className="flex items-center gap-1 text-slate-400">
+                      <div className="flex items-center justify-end gap-1 text-slate-400 shrink-0 self-end md:self-center pt-1 md:pt-0 border-t md:border-t-0 border-slate-200/50 dark:border-slate-700/50 w-full md:w-auto">
                         <button
                           type="button"
                           onClick={() => handleMoveRoutine(idx, 'up')}
@@ -1043,12 +1047,12 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                     </div>
 
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
                           Descrição / Atividades da Rotina
                         </label>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           {/* Preset selector dropdown */}
                           <select
                             defaultValue=""
@@ -1058,12 +1062,15 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                               const found = routinePresets.find(p => p.id === selectedId);
                               if (found) {
                                 handleUpdateRoutine(item.id, 'description', found.description);
+                                if (found.title) {
+                                  handleUpdateRoutine(item.id, 'title', found.title);
+                                }
                               }
                               e.target.value = "";
                             }}
-                            className="px-2 py-0.5 text-[11px] font-semibold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 outline-none hover:border-blue-500"
+                            className="max-w-full sm:max-w-xs px-2 py-0.5 text-[11px] font-semibold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 outline-none hover:border-blue-500 truncate"
                           >
-                            <option value="" disabled>📋 Inserir Descrição Pronta...</option>
+                            <option value="" disabled>📋 Inserir Modelo Pronto...</option>
                             {routinePresets.map((preset) => (
                               <option key={preset.id} value={preset.id}>
                                 [{preset.category}] {preset.title}
@@ -1079,11 +1086,11 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                               setNewPresetDesc(item.description || '');
                               setPresetModalOpen(true);
                             }}
-                            className="px-2 py-0.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-colors"
-                            title="Salvar esta descrição como um modelo pré-configurado"
+                            className="px-2 py-0.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 font-bold text-[11px] flex items-center gap-1 border border-emerald-500/30 transition-colors shrink-0"
+                            title="Salvar esta rotina como um modelo pré-configurado"
                           >
                             <Plus className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                            <span>Nova Descrição Pronta</span>
+                            <span>Novo Modelo</span>
                           </button>
                         </div>
                       </div>
