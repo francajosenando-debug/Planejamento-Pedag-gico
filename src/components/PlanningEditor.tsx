@@ -123,6 +123,9 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
   const [blockAiPrompt, setBlockAiPrompt] = useState<string>('');
   const [isGeneratingBlockLesson, setIsGeneratingBlockLesson] = useState<boolean>(false);
 
+  // Retractable Title Model Preset State
+  const [expandedTitleItemId, setExpandedTitleItemId] = useState<string | null>(null);
+
   // AI Handler for individual Routine Block
   const handleGenerateRoutineWithAi = async (routineItem: RoutineItem) => {
     setGeneratingRoutineId(routineItem.id);
@@ -921,9 +924,9 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                     key={item.id}
                     className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-3 relative group"
                   >
-                    {/* Top Row: Time, Title Input and Item Actions */}
+                    {/* Top Row: Time, Title Input + Retractable "Modelos de Título" Button and Item Actions */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-1 min-w-[220px]">
+                      <div className="flex flex-wrap items-center gap-2 flex-1 min-w-[220px]">
                         <input
                           id={`routine-time-${item.id}`}
                           type="text"
@@ -933,14 +936,33 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                           className="w-28 sm:w-32 px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-300 focus:ring-2 focus:ring-blue-500 outline-none shrink-0"
                         />
 
-                        <input
-                          id={`routine-title-${item.id}`}
-                          type="text"
-                          value={item.title}
-                          onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
-                          placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
-                          className="flex-1 min-w-[140px] px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
+                        <div className="relative flex-1 min-w-[200px] flex items-center gap-1.5">
+                          <input
+                            id={`routine-title-${item.id}`}
+                            type="text"
+                            value={item.title}
+                            onChange={(e) => handleUpdateRoutine(item.id, 'title', e.target.value)}
+                            placeholder="Título ex: ROTINA / CONTAÇÃO DE HISTÓRIA"
+                            className="w-full px-2.5 py-1.5 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                          />
+
+                          {/* Retractable Blue "Modelos de Título" Button */}
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTitleItemId(expandedTitleItemId === item.id ? null : item.id)}
+                            className="px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 font-bold text-[11px] flex items-center gap-1 transition-colors shrink-0 shadow-xs"
+                            title="Modelos de Título"
+                          >
+                            <ListChecks className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span className="hidden sm:inline">Modelos de Título</span>
+                            <span className="sm:hidden">Modelos</span>
+                            {expandedTitleItemId === item.id ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 ml-0.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 ml-0.5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       {/* Reordering & Action Controls */}
@@ -984,68 +1006,70 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                       </div>
                     </div>
 
-                    {/* Quick Tools & Preset Selectors Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-100/70 dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'title', currentValue: item.title })}
-                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-slate-200 dark:border-slate-700 font-bold text-[11px] flex items-center gap-1.5 transition-colors shadow-xs"
-                          title="Escolher um título pré-configurado de rotina"
-                        >
-                          <ListChecks className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                          <span>Modelos de Título</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'description', currentValue: item.description })}
-                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-slate-200 dark:border-slate-700 font-bold text-[11px] flex items-center gap-1.5 transition-colors shadow-xs"
-                          title="Escolher modelo pré-configurado de descrição"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <span>Modelos de Descrição</span>
-                        </button>
-
-                        {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                    {/* Collapsible Panel for Title Models */}
+                    {expandedTitleItemId === item.id && (
+                      <div className="p-3 bg-blue-50/90 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-xl space-y-2 animate-in fade-in duration-150">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-blue-900 dark:text-blue-200 flex items-center gap-1">
+                            <ListChecks className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                            <span>Selecione um Modelo de Título:</span>
+                          </span>
                           <button
                             type="button"
-                            onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
-                            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1.5 border border-amber-500/30 transition-colors"
-                            title="Selecionar uma história do Banco de Histórias"
+                            onClick={() => setExpandedTitleItemId(null)}
+                            className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
                           >
-                            <BookMarked className="w-3.5 h-3.5 text-amber-500" />
-                            <span>Escolher História</span>
+                            Recolher ▲
                           </button>
-                        )}
-
-                        {/b(í|i)bli|devocional|religi/i.test(item.title) && (
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 max-h-48 overflow-y-auto pr-1">
+                          {[
+                            "ROTINA / ACOLHIDA",
+                            "RODA DE CONVERSA / CHAMADINHA",
+                            "ALMOÇO / HIGIENE / BANHEIRO",
+                            "LANCHINHO / HIGIENIZAÇÃO",
+                            "PARQUE / RECREAÇÃO / PARQUINHO",
+                            "CONTAÇÃO DE HISTÓRIAS / RODA DE LEITURA",
+                            "MOMENTO BÍBLICO / DEVOCIONAL",
+                            "ATIVIDADE DIRIGIDA / PEDAGÓGICA",
+                            "MÚSICA E MOVIMENTO / EXPRESSÃO CORPORAL",
+                            "SONO / DESCANSO / CALMARIA",
+                            "DESPEDIDA / ORGANIZAÇÃO DA SALA"
+                          ].map((titleOpt) => (
+                            <button
+                              key={titleOpt}
+                              type="button"
+                              onClick={() => {
+                                handleUpdateRoutine(item.id, 'title', titleOpt);
+                                setExpandedTitleItemId(null);
+                              }}
+                              className={`px-2.5 py-1.5 rounded-lg text-left text-[11px] font-semibold border transition-all ${
+                                item.title === titleOpt
+                                  ? 'bg-blue-600 text-white border-blue-600 font-bold'
+                                  : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-blue-200 dark:border-blue-800/60 hover:bg-blue-100 dark:hover:bg-blue-900/60'
+                              }`}
+                            >
+                              {titleOpt}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="pt-1 border-t border-blue-200/60 dark:border-blue-800/60 flex justify-end">
                           <button
                             type="button"
-                            onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1.5 border border-indigo-500/30 transition-colors"
-                            title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                            onClick={() => {
+                              setRoutinePresetTarget({ routineId: item.id, mode: 'title', currentValue: item.title });
+                              setExpandedTitleItemId(null);
+                            }}
+                            className="text-[11px] font-bold text-blue-700 dark:text-blue-300 hover:underline flex items-center gap-1"
                           >
-                            <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
-                            <span>Escolher Aula Bíblica</span>
+                            <span>Ver todos / Gerenciar títulos...</span>
                           </button>
-                        )}
+                        </div>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleGenerateRoutineWithAi(item)}
-                        disabled={generatingRoutineId === item.id}
-                        className="px-3 py-1 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all disabled:opacity-50"
-                        title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                        <span>{generatingRoutineId === item.id ? 'Gerando...' : 'Gerar c/ IA'}</span>
-                      </button>
-                    </div>
+                    )}
 
                     {/* Description Section */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <label htmlFor={`routine-desc-${item.id}`} className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                         Descrição / Atividades da Rotina
                       </label>
@@ -1057,6 +1081,57 @@ export const PlanningEditor: React.FC<PlanningEditorProps> = ({
                         rows={2}
                         className="w-full p-2.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-blue-500"
                       />
+
+                      {/* Bottom Toolbar: Green "Modelos de Descrição" Button on Left, alongside AI / Bank actions */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {/* Green "Modelos de Descrição" Button */}
+                          <button
+                            type="button"
+                            onClick={() => setRoutinePresetTarget({ routineId: item.id, mode: 'description', currentValue: item.description })}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold text-[11px] flex items-center gap-1.5 transition-colors shadow-xs"
+                            title="Escolher modelo pré-configurado de descrição"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                            <span>Modelos de Descrição</span>
+                          </button>
+
+                          {/conta(ç|c)(ã|a)o|hist(ó|o)ria/i.test(item.title) && (
+                            <button
+                              type="button"
+                              onClick={() => setStorySelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Contação de História'})` })}
+                              className="px-2.5 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 font-bold text-[11px] flex items-center gap-1.5 border border-amber-500/30 transition-colors"
+                              title="Selecionar uma história do Banco de Histórias"
+                            >
+                              <BookMarked className="w-3.5 h-3.5 text-amber-500" />
+                              <span>Escolher História</span>
+                            </button>
+                          )}
+
+                          {/b(í|i)bli|devocional|religi/i.test(item.title) && (
+                            <button
+                              type="button"
+                              onClick={() => setBibleSelectorTarget({ type: 'routine', id: item.id, targetTitle: `Rotina (${item.title || 'Aula Bíblica'})` })}
+                              className="px-2.5 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] flex items-center gap-1.5 border border-indigo-500/30 transition-colors"
+                              title="Selecionar uma aula bíblica do Banco de Aulas Bíblicas"
+                            >
+                              <BookOpenCheck className="w-3.5 h-3.5 text-indigo-500" />
+                              <span>Escolher Aula Bíblica</span>
+                            </button>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateRoutineWithAi(item)}
+                          disabled={generatingRoutineId === item.id}
+                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all disabled:opacity-50"
+                          title="Usar Assistente de IA para gerar o conteúdo deste bloco de tempo"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                          <span>{generatingRoutineId === item.id ? 'Gerando...' : 'Gerar c/ IA'}</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Image Upload for Routine */}
